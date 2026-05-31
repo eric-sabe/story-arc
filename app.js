@@ -60,7 +60,7 @@ const a = (x, y) => ({ x, y }); // shorthand for an anchor without explicit hand
    `anchors` arrays below; scene-default.json mirrors this. */
 
 const DEFAULT_SCENE = {
-  meta: { name: 'Crucible Curve', version: 2 },
+  meta: { name: 'The Crucible Curve', version: 2 },
   artboard: {
     width: 1920,
     height: 1080,
