@@ -671,9 +671,11 @@ function renderBandAxis(band, xR, ax, s) {
   lab(ax.yHigh, yTop + 4, 'hanging');
   lab(ax.yLow, yBot - 2, 'auto');
 
-  // band title = the layer's name, rotated up the right side (its "Phase N ·"
-  // prefix trimmed so it reads as the track name).
-  const name = (band.layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || band.layer.name || '';
+  // band title (rotated up the right side). An explicit layer.axisTitle wins;
+  // otherwise derive from the layer name (trimming any "Phase N ·" prefix).
+  // Hidden when the layer's axisTitleShow is off.
+  const derived = (band.layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || band.layer.name || '';
+  const name = band.layer.axisTitleShow === false ? '' : ((band.layer.axisTitle || '').trim() || derived);
   if (name) {
     const cy = (yTop + yBot) / 2, tx = xR + 74;
     const title = el('text', { x: tx, y: cy, fill: s.labelColor, 'font-size': 18, 'font-family': 'Helvetica, Arial, sans-serif', 'letter-spacing': '2', 'text-anchor': 'middle', transform: `rotate(90 ${tx} ${cy})` });
@@ -1080,7 +1082,13 @@ function renderOverlay() {
       });
       box.dataset.kind = 'label'; box.dataset.lidx = li; box.style.cursor = 'move';
       box.setAttribute('pointer-events', 'all');
-      withTip(box, `Label “${lab.text || ''}” — drag to reposition`);
+      withTip(box, `Label “${lab.text || ''}” — drag to reposition, double-click to edit text`);
+      box.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const cur = getSelected(); const l = cur && cur.labels && cur.labels[li];
+        if (!l) return;
+        startCanvasTextEdit(box, l.text, (val) => { l.text = val; renderLabels(); renderOverlay(); syncLabels(); scheduleAutosave(); });
+      });
       L.overlay.appendChild(box);
     });
   }
@@ -1234,7 +1242,11 @@ function renderMilestoneHandles(upp) {
     box.dataset.kind = 'mslabel'; box.dataset.msid = ms.id; box.style.cursor = 'move';
     box.setAttribute('pointer-events', 'all');
     box.setAttribute('vector-effect', 'non-scaling-stroke');
-    withTip(box, `Milestone “${ms.label}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}`);
+    withTip(box, `Milestone “${ms.label}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}, double-click to edit text`);
+    box.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      startCanvasTextEdit(box, ms.label, (val) => { ms.label = val; renderGuides(); renderOverlay(); syncMilestones(); scheduleAutosave(); });
+    });
     L.overlay.appendChild(box);
   }
 }
@@ -1255,7 +1267,16 @@ function renderTitleHandle(upp) {
   box.dataset.kind = 'title'; box.style.cursor = 'move';
   box.setAttribute('pointer-events', 'all');
   box.setAttribute('vector-effect', 'non-scaling-stroke');
-  withTip(box, `Title “${text}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}`);
+  withTip(box, `Title “${text}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}, double-click to edit text`);
+  box.addEventListener('dblclick', (e) => {
+    e.stopPropagation();
+    startCanvasTextEdit(box, (state.scene.meta && state.scene.meta.name) || '', (val) => {
+      state.scene.meta = state.scene.meta || {};
+      state.scene.meta.name = val;
+      syncVisualName();
+      renderTitle(); renderOverlay(); scheduleAutosave();
+    });
+  });
   L.overlay.appendChild(box);
 }
 
@@ -1670,6 +1691,56 @@ function selectCurve(id) {
   syncPropsPanel();
 }
 
+/* ---- in-place text editing ---- */
+
+// Float a text input over an on-canvas element (label / milestone / title) so
+// it can be edited where it sits. Commits on Enter or blur, cancels on Esc.
+let activeTextEdit = null;
+function startCanvasTextEdit(svgEl, current, commit) {
+  if (activeTextEdit) activeTextEdit.cancel();
+  const rect = svgEl.getBoundingClientRect();
+  const input = document.createElement('input');
+  input.type = 'text'; input.value = current || ''; input.className = 'canvas-text-edit';
+  Object.assign(input.style, {
+    left: Math.round(rect.left) + 'px', top: Math.round(rect.top) + 'px',
+    width: Math.max(Math.round(rect.width), 90) + 'px', height: Math.max(Math.round(rect.height), 26) + 'px',
+  });
+  document.body.appendChild(input);
+  input.focus(); input.select();
+  let done = false;
+  const finish = (save) => {
+    if (done) return; done = true;
+    input.remove(); activeTextEdit = null;
+    if (save) commit(input.value);
+  };
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  activeTextEdit = { cancel: () => finish(false) };
+}
+
+// Swap a list-row name span for an input to rename it inline (Curve Layers).
+function inlineEditSpan(span, current, commit) {
+  const input = document.createElement('input');
+  input.type = 'text'; input.value = current || ''; input.className = 'layer-name-input';
+  span.replaceWith(input);
+  input.focus(); input.select();
+  let done = false;
+  const finish = (save) => {
+    if (done) return; done = true;
+    if (save) commit(input.value); else syncLayerList();
+  };
+  input.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+}
+
 function syncLayerList() {
   const list = document.getElementById('layer-list');
   list.innerHTML = '';
@@ -1688,6 +1759,14 @@ function syncLayerList() {
     const nm = document.createElement('span');
     nm.className = 'layer-name';
     nm.textContent = curve.name;
+    nm.title = 'Double-click to rename';
+    nm.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      inlineEditSpan(nm, curve.name, (val) => {
+        curve.name = val.trim() || curve.name;
+        renderLabels(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
+      });
+    });
 
     const vis = document.createElement('button');
     vis.className = 'layer-vis' + (curve.visible ? ' on' : '');
@@ -1711,7 +1790,7 @@ function syncLayerList() {
     const nameInput = document.createElement('input');
     nameInput.type = 'text'; nameInput.value = layer.name; nameInput.className = 'layer-name-input';
     nameInput.title = 'Rename this layer (also updates the Milestones grouping)';
-    nameInput.addEventListener('input', () => { layer.name = nameInput.value; syncMilestones(); syncPropsPanel(); scheduleAutosave(); });
+    nameInput.addEventListener('input', () => { layer.name = nameInput.value; syncMilestones(); syncPropsPanel(); syncBandAxisControls(); renderAxes(); scheduleAutosave(); });
 
     const allVisible = members.length && members.every((c) => c.visible);
     const gvis = document.createElement('button');
@@ -1873,7 +1952,8 @@ const actions = {
   'save-theme': () => saveThemeFromScene(),
   'del-theme': () => deleteCurrentTheme(),
   'add-milestone': () => {
-    state.scene.milestones.push({ id: uid('ms'), label: 'New', x: 0.5, showGuide: true, phase: 'primary', group: sceneLayers()[0]?.id || 'primary' });
+    const group = getSelected()?.group || sceneLayers()[0]?.id || 'primary';
+    state.scene.milestones.push({ id: uid('ms'), label: 'New', x: 0.5, showGuide: true, phase: 'primary', group });
     renderGuides(); syncMilestones(); scheduleAutosave();
   },
   'save-scene': saveScene,
@@ -1987,14 +2067,40 @@ function syncLabels() {
   });
 }
 
+// Move the selected curve one step in the Curve-Layers list. Within a layer it
+// swaps draw order; at a layer boundary it crosses into the adjacent layer
+// (changing the curve's group) so ▲▼ can relocate a curve between layers.
+// dir: +1 = up the list (toward the top), -1 = down.
 function reorder(dir) {
   const c = getSelected(); if (!c) return;
-  const i = state.scene.curves.indexOf(c);
-  const j = i + dir;
-  if (j < 0 || j >= state.scene.curves.length) return;
-  state.scene.curves.splice(i, 1);
-  state.scene.curves.splice(j, 0, c);
-  renderCurves(); syncLayerList(); scheduleAutosave();
+  const arr = state.scene.curves;
+  const layers = sceneLayers();
+  const li = layers.findIndex((l) => l.id === c.group);
+  // members of c's layer, top→bottom as rendered (array order reversed)
+  const vis = arr.filter((x) => x.group === c.group).reverse();
+  const vi = vis.indexOf(c);
+
+  const swap = (other) => { const i = arr.indexOf(c), j = arr.indexOf(other); arr[i] = other; arr[j] = c; };
+  // Move c next to its new layer's block at a visual end ('top' or 'bottom').
+  const moveToLayerEnd = (layerId, end) => {
+    c.group = layerId;
+    const k = arr.indexOf(c); arr.splice(k, 1);
+    const members = arr.filter((x) => x.group === layerId);
+    if (!members.length) { arr.push(c); return; }
+    if (end === 'bottom') arr.splice(arr.indexOf(members[0]), 0, c);        // visual bottom = first in array
+    else arr.splice(arr.indexOf(members[members.length - 1]) + 1, 0, c);    // visual top = last in array
+  };
+
+  if (dir > 0) {                    // UP
+    if (vi > 0) swap(vis[vi - 1]);
+    else if (li > 0) moveToLayerEnd(layers[li - 1].id, 'bottom');
+    else return;
+  } else {                          // DOWN
+    if (vi < vis.length - 1) swap(vis[vi + 1]);
+    else if (li < layers.length - 1) moveToLayerEnd(layers[li + 1].id, 'top');
+    else return;
+  }
+  renderCurves(); renderOverlay(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
 }
 
 // toolbar/button delegation
@@ -2015,6 +2121,18 @@ for (const [id, key] of Object.entries(toggleMap)) {
 }
 
 // --- milestones list (grouped by the SAME layers as Curve Layers) ---
+// Swap a milestone with its neighbour within the same layer (delta -1 up / +1 down).
+function milestoneMove(ms, delta) {
+  const arr = state.scene.milestones;
+  const members = arr.filter((m) => m.group === ms.group);
+  const gi = members.indexOf(ms);
+  const target = members[gi + delta];
+  if (!target) return;
+  const i = arr.indexOf(ms), j = arr.indexOf(target);
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  renderGuides(); syncMilestones(); scheduleAutosave();
+}
+
 function syncMilestones() {
   const list = document.getElementById('milestone-list');
   list.innerHTML = '';
@@ -2051,11 +2169,27 @@ function syncMilestones() {
     guide.title = 'Toggle the dashed guide line';
     guide.addEventListener('click', () => { ms.showGuide = !ms.showGuide; renderGuides(); syncMilestones(); scheduleAutosave(); });
 
+    // layer assignment — send this milestone to any layer
+    const grp = document.createElement('select');
+    grp.className = 'ms-group';
+    grp.title = 'Move this milestone to another layer';
+    for (const l of sceneLayers()) { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; grp.appendChild(o); }
+    grp.value = ms.group;
+    grp.addEventListener('change', () => { ms.group = grp.value; renderGuides(); syncMilestones(); scheduleAutosave(); });
+
+    // reorder within the layer
+    const up = document.createElement('button');
+    up.className = 'ms-move'; up.textContent = '▲'; up.title = 'Move up within this layer';
+    up.addEventListener('click', () => milestoneMove(ms, -1));
+    const down = document.createElement('button');
+    down.className = 'ms-move'; down.textContent = '▼'; down.title = 'Move down within this layer';
+    down.addEventListener('click', () => milestoneMove(ms, +1));
+
     const del = document.createElement('button');
     del.className = 'ms-del'; del.textContent = '✕'; del.title = 'Delete this milestone';
     del.addEventListener('click', () => { state.scene.milestones = state.scene.milestones.filter((m) => m.id !== ms.id); renderGuides(); syncMilestones(); scheduleAutosave(); });
 
-    li.append(show, label, x, y, guide, del);
+    li.append(show, label, x, y, guide, grp, up, down, del);
     return li;
   };
 
@@ -2132,6 +2266,38 @@ function syncRegionControls() {
   document.getElementById('branch-note').textContent = multi
     ? 'A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one layer gives way to the next.'
     : 'Branch is unavailable with a single layer — the chart is one continuous space and curves span the whole canvas. Add a second layer to enable it.';
+  syncBandAxisControls();
+}
+
+// One row per Phase-2 layer band: show/hide its right-edge axis title and edit
+// the title text (blank falls back to the layer name).
+function syncBandAxisControls() {
+  const wrap = document.getElementById('band-axis-controls');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const bands = branchEnabled() ? sceneLayers().slice(1) : [];
+  if (!bands.length) return;
+  const head = document.createElement('div');
+  head.className = 'field-label tiny'; head.textContent = 'Layer axis titles (right edge)';
+  wrap.appendChild(head);
+  for (const layer of bands) {
+    const row = document.createElement('div');
+    row.className = 'row band-axis-row';
+    const show = document.createElement('label');
+    show.className = 'chk'; show.title = 'Show this layer’s right-edge axis title';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = layer.axisTitleShow !== false;
+    cb.addEventListener('change', () => { layer.axisTitleShow = cb.checked; renderAxes(); scheduleAutosave(); });
+    show.appendChild(cb);
+    const title = document.createElement('input');
+    title.type = 'text'; title.className = 'grow';
+    title.placeholder = (layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || layer.name;
+    title.value = layer.axisTitle || '';
+    title.title = 'Right-edge axis title for this layer (blank = layer name)';
+    title.addEventListener('input', () => { layer.axisTitle = title.value; renderAxes(); scheduleAutosave(); });
+    row.append(show, title);
+    wrap.appendChild(row);
+  }
 }
 
 // --- visual title controls ---
@@ -2263,6 +2429,18 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (e.key === 'y' || e.key === 'Y' || e.shiftKey) History.doRedo();
     else History.doUndo();
+    return;
+  }
+
+  // Esc: blur a focused field, or otherwise deselect the curve + dismiss the
+  // active junction handle (cancelling an in-place edit is handled by the editor).
+  if (e.key === 'Escape') {
+    const ae = document.activeElement;
+    if (ae && /input|select|textarea/i.test(ae.tagName)) { ae.blur(); return; }
+    let changed = false;
+    if (state.activeJunction) { state.activeJunction = null; changed = true; }
+    if (state.selectedCurveId) { state.selectedCurveId = null; changed = true; }
+    if (changed) { renderCurves(); renderOverlay(); syncLayerList(); syncPropsPanel(); }
     return;
   }
 
@@ -2462,7 +2640,13 @@ function normalizeScene(input) {
   layers = layers.map((l) => {
     const id = safeId(l.id, 'layer', layerIds);
     if (typeof l.id === 'string' && l.id !== id) idMap.set(l.id, id);
-    return { id, name: str(l.name, 'Layer') };
+    return {
+      id, name: str(l.name, 'Layer'),
+      // Phase-2 band axis title: text override (blank → derived from name) and
+      // a show flag for the right-edge per-layer axis title.
+      axisTitle: typeof l.axisTitle === 'string' ? l.axisTitle : '',
+      axisTitleShow: l.axisTitleShow !== false,
+    };
   });
   // Resolve a curve/milestone group ref to a real layer id (follow remaps;
   // auto-create a layer for a safe-but-undeclared group; else use the first layer).

@@ -33,7 +33,7 @@
     "branch": {
       "x": 0.605,
       "y": 0.89,
-      "show": false
+      "show": true
     },
     "divider": true,
     "tint": true
@@ -92,8 +92,8 @@
     {
       "id": "ms-901qbvt",
       "label": "COMPLACENCY",
-      "x": 0.7911377245508984,
-      "y": 1.0459075117699894,
+      "x": 0.8,
+      "y": 0.99,
       "showGuide": false,
       "visible": true,
       "phase": "post",
@@ -105,8 +105,8 @@
     {
       "id": "ms-f41bvhx",
       "label": "RENEWING THE CRUCIBLE",
-      "x": 0.78,
-      "y": -0.04592592592592602,
+      "x": 0.77,
+      "y": 0.4,
       "showGuide": false,
       "visible": true,
       "phase": "post",
@@ -129,7 +129,7 @@
     {
       "id": "ms-ixzotn6",
       "label": "Bureaucracy",
-      "x": 0.756946107784431,
+      "x": 0.75,
       "y": 0.5,
       "showGuide": false,
       "visible": true,
@@ -140,7 +140,7 @@
     {
       "id": "ms-fncs0tp",
       "label": "Stagnation",
-      "x": 0.8630538922155688,
+      "x": 0.84,
       "y": 0.5,
       "showGuide": false,
       "visible": true,
@@ -151,12 +151,56 @@
     {
       "id": "ms-3vdsvgz",
       "label": "Decline",
-      "x": 0.9569461077844311,
+      "x": 0.95,
       "y": 0.5,
       "showGuide": false,
       "visible": true,
       "phase": "post",
       "group": "decline",
+      "optional": false
+    },
+    {
+      "id": "ms-9t6ekiu",
+      "label": "New Cost",
+      "x": 0.7,
+      "y": 0.3,
+      "showGuide": false,
+      "visible": true,
+      "phase": "post",
+      "group": "renewal",
+      "optional": false
+    },
+    {
+      "id": "ms-rlr7l4p",
+      "label": "New Resistance",
+      "x": 0.79,
+      "y": 0.3,
+      "showGuide": false,
+      "visible": true,
+      "phase": "post",
+      "group": "renewal",
+      "optional": false
+    },
+    {
+      "id": "ms-62xbdpz",
+      "label": "Temporary Dip",
+      "x": 0.87,
+      "y": 0.3,
+      "showGuide": false,
+      "visible": true,
+      "phase": "post",
+      "group": "renewal",
+      "optional": false
+    },
+    {
+      "id": "ms-5eetitj",
+      "label": "Future Value Creation",
+      "x": 0.96,
+      "y": 0.3,
+      "showGuide": false,
+      "visible": true,
+      "phase": "post",
+      "group": "renewal",
       "optional": false
     }
   ],
@@ -193,13 +237,13 @@
       ],
       "anchors": [
         {
-          "x": 0,
-          "y": 0.13,
+          "x": 0.02,
+          "y": 0.02,
           "mirror": false
         },
         {
-          "x": 0.07592814371257485,
-          "y": 0.3378669644579475,
+          "x": 0.1,
+          "y": 0.25,
           "mirror": false
         },
         {
@@ -291,18 +335,18 @@
           "mirror": false
         },
         {
-          "x": 0.42,
-          "y": 0.42,
+          "x": 0.3985984573821108,
+          "y": 0.375,
           "mirror": false
         },
         {
           "x": 0.5,
-          "y": 0.3070722415123457,
+          "y": 0.24,
           "mirror": false
         },
         {
-          "x": 0.6069461077844311,
-          "y": 0.28,
+          "x": 0.605,
+          "y": 0.13,
           "mirror": false
         }
       ]
@@ -327,8 +371,8 @@
         {
           "id": "lab-q1dumfy",
           "text": "Confidence",
-          "x": 0.0532934131736527,
-          "y": 0.8275308641975309,
+          "x": 0,
+          "y": 0.8424691358024691,
           "anchor": 0,
           "fontSize": 26,
           "glow": true,
@@ -440,7 +484,7 @@
     },
     {
       "id": "c-1ex68sq",
-      "name": "False Confidence",
+      "name": "Complacency",
       "color": "#22d3ee",
       "strokeWidth": 5,
       "glow": 16,
@@ -454,20 +498,7 @@
       "role": "confidence",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-40i5zgp",
-          "text": "False Confidence",
-          "x": 0.6823952095808383,
-          "y": 0.9050617283950617,
-          "anchor": 0,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
           "x": 0.605,
@@ -480,18 +511,18 @@
           "mirror": false
         },
         {
-          "x": 0.8166805061751496,
-          "y": 0.9275308641975308,
+          "x": 0.83,
+          "y": 0.9,
           "mirror": false
         },
         {
-          "x": 0.92,
-          "y": 0.88,
+          "x": 0.9166666666666666,
+          "y": 0.94,
           "mirror": false
         },
         {
           "x": 1,
-          "y": 0.8275308641975309,
+          "y": 0.82,
           "mirror": false
         }
       ]
@@ -512,20 +543,7 @@
       "role": "value",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-8ecv6cd",
-          "text": "Eroding Value",
-          "x": 0.6716167664670659,
-          "y": 0.7929508162133487,
-          "anchor": 2,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
           "x": 0.5951497005988023,
@@ -575,20 +593,7 @@
       "role": "resistance",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-0qtybh4",
-          "text": "Inverted Resistence",
-          "x": 0.6752095808383234,
-          "y": 0.625,
-          "anchor": 1,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
           "x": 0.605,
@@ -602,17 +607,17 @@
         },
         {
           "x": 0.84,
-          "y": 0.6777412320360725,
+          "y": 0.5551489182460455,
           "mirror": false
         },
         {
-          "x": 0.9286227544910179,
-          "y": 0.7756668655960648,
+          "x": 0.92,
+          "y": 0.5551489182460455,
           "mirror": false
         },
         {
           "x": 1,
-          "y": 0.88,
+          "y": 0.5551489182460455,
           "mirror": false
         }
       ]
@@ -633,44 +638,31 @@
       "role": "cost",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-pgf57kj",
-          "text": "Faster Optimization",
-          "x": 0.8588023952095808,
-          "y": 0.21,
-          "anchor": 2,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
-          "x": 0.605,
-          "y": 0.13,
+          "x": 0.62,
+          "y": 0.05,
           "mirror": false
         },
         {
-          "x": 0.681377245508982,
-          "y": 0.375,
+          "x": 0.7,
+          "y": 0.24,
           "mirror": false
         },
         {
           "x": 0.78,
-          "y": 0.18,
+          "y": 0.11,
           "mirror": false
         },
         {
-          "x": 0.881676646706587,
-          "y": 0.10753086419753087,
+          "x": 0.88,
+          "y": 0.05,
           "mirror": false
         },
         {
           "x": 1,
-          "y": 0.06,
+          "y": 0.04,
           "mirror": false
         }
       ]
@@ -691,49 +683,36 @@
       "role": "resistance",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-2c1k4bn",
-          "text": "Productive Resistance",
-          "anchor": 3,
-          "x": 0.7254491017964072,
-          "y": 0.09024691358024692,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
-          "x": 0.605,
-          "y": 0.13,
+          "x": 0.64,
+          "y": 0.04,
           "mirror": false
         },
         {
-          "x": 0.6666666666666666,
-          "y": 0.25,
+          "x": 0.74,
+          "y": 0.09,
           "mirror": false
         },
         {
-          "x": 0.7244311377245508,
-          "y": 0.18,
+          "x": 0.8,
+          "y": 0.21,
           "mirror": false
         },
         {
-          "x": 0.8325149700598802,
-          "y": 0.13,
+          "x": 0.86,
+          "y": 0.12,
           "mirror": false
         },
         {
-          "x": 0.9355688622754491,
-          "y": 0.10753086419753087,
+          "x": 0.94,
+          "y": 0.06,
           "mirror": false
         },
         {
           "x": 1,
-          "y": 0.10753086419753087,
+          "y": 0.05,
           "mirror": false
         }
       ]
@@ -754,44 +733,31 @@
       "role": "value",
       "easing": "",
       "tension": 1,
-      "labels": [
-        {
-          "id": "lab-36g8xoo",
-          "text": "Shorter Time to Value",
-          "x": 0.8062275449101798,
-          "y": 0.42,
-          "anchor": 3,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
+      "labels": [],
       "anchors": [
         {
-          "x": 0.605,
+          "x": 0.62,
+          "y": 0.07,
+          "mirror": false
+        },
+        {
+          "x": 0.74,
+          "y": 0.1,
+          "mirror": false
+        },
+        {
+          "x": 0.85,
+          "y": 0.05,
+          "mirror": false
+        },
+        {
+          "x": 0.92,
           "y": 0.13,
           "mirror": false
         },
         {
-          "x": 0.7,
-          "y": 0.19271604938271605,
-          "mirror": false
-        },
-        {
-          "x": 0.78,
-          "y": 0.3070722415123457,
-          "mirror": false
-        },
-        {
-          "x": 0.8588023952095808,
-          "y": 0.3724348656925154,
-          "mirror": false
-        },
-        {
           "x": 1,
-          "y": 0.42,
+          "y": 0.26,
           "mirror": false
         }
       ]
@@ -824,9 +790,9 @@
     "showTicks": true
   },
   "title": {
-    "show": true,
-    "x": 0.27648303393213575,
-    "y": 1.0553086419753086,
+    "show": false,
+    "x": 0.5,
+    "y": 1.05,
     "fontSize": 56,
     "color": "#ffffff",
     "colorAuto": true,

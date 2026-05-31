@@ -82,7 +82,14 @@ Snap · Solo (show only the selected curve).
   `easing` + `tension`) and applies live in spline mode; in bezier mode it also
   bakes the handles.
 
-`Delete` / `Backspace` removes the selected curve. `v` toggles Solo.
+`Delete` / `Backspace` removes the selected curve. `v` toggles Solo. **`Esc`**
+deselects the current curve (and dismisses a junction handle).
+
+**Rename a curve** by double-clicking its name in the *Curve Layers* list (or via
+the **Name** field in the Selected-Curve panel). **Edit any label on the slide in
+place** — double-click a curve word-label, a milestone label, or the visual title on
+the canvas, type, and press Enter (Esc cancels); the change is written straight to
+the scene and its panel control.
 
 ### Snap & smart alignment guides
 
@@ -128,8 +135,11 @@ curves **and** milestones.
   curves and milestones move to the first layer — nothing is lost; the last layer
   can't be deleted).
 - **+ Curve** adds a curve to the selected curve's layer. Per-curve: Duplicate,
-  Delete, reorder draw-order (`▲ ▼`), visibility (👁), and move between layers via the
-  **Layer** dropdown in the Selected-Curve panel.
+  Delete, visibility (👁), and move between layers via the **Layer** dropdown in the
+  Selected-Curve panel.
+- **`▲ ▼`** reorder the selected curve within its layer (draw order) and, at a layer
+  boundary, **move it into the adjacent layer** — so you can duplicate a curve and
+  walk the copy up or down into another layer.
 
 ---
 
@@ -138,7 +148,9 @@ curves **and** milestones.
 Named markers along the x-axis (the *Milestones* panel), **grouped under the same
 layer headers** as the curves. Each row: visibility · label · `x` (0–1) · `y`
 (blank = sits on the axis; a value floats the label at that height) · guide-line
-toggle · delete. `+ Add` creates a new one.
+toggle · **layer** dropdown · **`▲ ▼`** reorder-within-layer · delete. `+ Add`
+creates one in the selected curve's layer; use the per-row **layer** dropdown to send
+it to any other layer.
 
 You can also **drag a milestone label directly on the canvas** (hover shows a faint
 grab box) — it moves the milestone's x and sets its label height, obeys **Snap**
@@ -218,10 +230,11 @@ means. Stored in `scene.axes`.
 
 **Per-layer right-edge axes.** When Branch is on (2+ layers), the primary Y axis is
 **repeated separately for each Phase-2 layer band** on the right edge — line +
-arrowhead, ticks, the same `Low`/`High` labels (mirrored to the right), and the
-layer's name as a rotated band title. Each band is an even vertical slice of the
-post-divider region, so the right side reads as stacked sub-charts. These honor the
-**Ticks** toggle and the global **Axes** toggle, and export with the slide.
+arrowhead, ticks, the same `Low`/`High` labels (mirrored to the right), and a rotated
+band title. Each band is an even vertical slice of the post-divider region, so the
+right side reads as stacked sub-charts. These honor the **Ticks** toggle and the
+global **Axes** toggle, and export with the slide. Each band title can be **renamed
+or hidden** from the **Branch** panel (it defaults to the layer's name).
 
 ---
 

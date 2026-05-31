@@ -1,0 +1,150 @@
+{
+  "meta": { "name": "Crucible Curve", "version": 2 },
+  "artboard": {
+    "width": 1920,
+    "height": 1080,
+    "padding": { "top": 150, "right": 120, "bottom": 120, "left": 130 },
+    "background": { "color": "#05070d", "haze": true, "vignette": true }
+  },
+  "style": {
+    "gridX": 12,
+    "gridY": 8,
+    "gridColor": "#2a3556",
+    "gridOpacity": 0.18,
+    "axisColor": "#5b6b94",
+    "guideColor": "#33406a",
+    "labelColor": "#8fa0c8"
+  },
+  "theme": "crucible-neon",
+  "mode": "dark",
+  "axes": { "xLabel": "TRANSFORMATION PROGRESS", "yLabel": "RELATIVE LEVEL", "yLow": "Low", "yHigh": "High", "showTicks": true },
+  "layers": [
+    { "id": "primary", "name": "Phase 1 · Primary Crucible" },
+    { "id": "decline", "name": "Phase 2 · Complacency / Decline" },
+    { "id": "renewal", "name": "Phase 2 · Renewing the Crucible" }
+  ],
+  "title": { "show": false, "x": 0.5, "y": 1.05, "fontSize": 56, "color": "#ffffff", "glow": true, "bold": true, "align": "middle" },
+  "regions": {
+    "enabled": true,
+    "branchX": 0.605,
+    "branch": { "x": 0.605, "y": 0.89, "show": true },
+    "divider": true,
+    "tint": true
+  },
+  "milestones": [
+    { "id": "ms-excitement",  "label": "Excitement",       "x": 0.04, "showGuide": true,  "phase": "primary", "group": "primary" },
+    { "id": "ms-friction",    "label": "Reality Friction", "x": 0.17, "showGuide": true,  "phase": "primary", "group": "primary" },
+    { "id": "ms-persistence", "label": "Persistence",      "x": 0.31, "showGuide": true,  "phase": "primary", "group": "primary" },
+    { "id": "ms-proficiency", "label": "Proficiency",      "x": 0.45, "showGuide": true,  "phase": "primary", "group": "primary" },
+    { "id": "ms-mastery",     "label": "Mastery",          "x": 0.57, "showGuide": true,  "phase": "primary", "group": "primary" },
+
+    { "id": "ms-complacency", "label": "COMPLACENCY",           "x": 0.80, "y": 0.99, "showGuide": false, "phase": "post", "group": "decline", "optional": true, "color": "#22d3ee" },
+    { "id": "ms-renewcap",    "label": "RENEWING THE CRUCIBLE", "x": 0.77, "y": 0.40, "showGuide": false, "phase": "post", "group": "renewal", "optional": true, "color": "#ffb24d" },
+
+    { "id": "ms-comfort",     "label": "Comfort",     "x": 0.66, "y": 0.50, "showGuide": false, "phase": "post", "group": "decline" },
+    { "id": "ms-bureaucracy", "label": "Bureaucracy", "x": 0.75, "y": 0.50, "showGuide": false, "phase": "post", "group": "decline" },
+    { "id": "ms-stagnation",  "label": "Stagnation",  "x": 0.84, "y": 0.50, "showGuide": false, "phase": "post", "group": "decline" },
+    { "id": "ms-decline",     "label": "Decline",     "x": 0.95, "y": 0.50, "showGuide": false, "phase": "post", "group": "decline" },
+
+    { "id": "ms-newcost",     "label": "New Cost",              "x": 0.70, "y": 0.30, "showGuide": false, "phase": "post", "group": "renewal" },
+    { "id": "ms-newresist",   "label": "New Resistance",        "x": 0.79, "y": 0.30, "showGuide": false, "phase": "post", "group": "renewal" },
+    { "id": "ms-tempdip",     "label": "Temporary Dip",         "x": 0.87, "y": 0.30, "showGuide": false, "phase": "post", "group": "renewal" },
+    { "id": "ms-futureval",   "label": "Future Value Creation", "x": 0.96, "y": 0.30, "showGuide": false, "phase": "post", "group": "renewal" }
+  ],
+  "curves": [
+    {
+      "id": "c-cost", "name": "Cost", "color": "#ff7a2f", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "primary",
+      "anchors": [
+        { "x": 0.02, "y": 0.02 }, { "x": 0.12, "y": 0.10 }, { "x": 0.17, "y": 0.78 },
+        { "x": 0.28, "y": 0.42 }, { "x": 0.40, "y": 0.14 }, { "x": 0.52, "y": 0.05 }, { "x": 0.60, "y": 0.03 }
+      ]
+    },
+    {
+      "id": "c-resistance", "name": "Resistance", "color": "#3f8cff", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "primary",
+      "anchors": [
+        { "x": 0.0, "y": 0.04 }, { "x": 0.10, "y": 0.28 }, { "x": 0.17, "y": 0.72 },
+        { "x": 0.24, "y": 0.54 }, { "x": 0.30, "y": 0.62 }, { "x": 0.37, "y": 0.52 },
+        { "x": 0.44, "y": 0.40 }, { "x": 0.52, "y": 0.18 }, { "x": 0.60, "y": 0.08 }
+      ]
+    },
+    {
+      "id": "c-confidence", "name": "Confidence", "color": "#22d3ee", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "primary",
+      "anchors": [
+        { "x": 0.0, "y": 0.82 }, { "x": 0.11, "y": 0.50 }, { "x": 0.20, "y": 0.30 },
+        { "x": 0.30, "y": 0.46 }, { "x": 0.42, "y": 0.70 }, { "x": 0.52, "y": 0.85 }, { "x": 0.60, "y": 0.90 }
+      ]
+    },
+    {
+      "id": "c-value", "name": "Value", "color": "#ffc93c", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "primary",
+      "anchors": [
+        { "x": 0.0, "y": 0.02 }, { "x": 0.16, "y": 0.06 }, { "x": 0.30, "y": 0.18 },
+        { "x": 0.42, "y": 0.42 }, { "x": 0.52, "y": 0.72 }, { "x": 0.60, "y": 0.88 }
+      ]
+    },
+
+    {
+      "id": "c-complacency", "name": "Complacency", "color": "#22d3ee", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "decline",
+      "anchors": [
+        { "x": 0.605, "y": 0.895 }, { "x": 0.70, "y": 0.94 }, { "x": 0.82, "y": 0.95 },
+        { "x": 0.92, "y": 0.90 }, { "x": 1.0, "y": 0.82 }
+      ]
+    },
+    {
+      "id": "c-erodingvalue", "name": "Eroding Value", "color": "#ffc93c", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "decline",
+      "anchors": [
+        { "x": 0.605, "y": 0.875 }, { "x": 0.68, "y": 0.86 }, { "x": 0.78, "y": 0.74 },
+        { "x": 0.86, "y": 0.58 }, { "x": 0.93, "y": 0.44 }, { "x": 1.0, "y": 0.34 }
+      ]
+    },
+    {
+      "id": "c-resistchange", "name": "Resistance to Change", "color": "#3f8cff", "strokeWidth": 5,
+      "glow": 16, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "decline",
+      "anchors": [
+        { "x": 0.605, "y": 0.10 }, { "x": 0.72, "y": 0.16 }, { "x": 0.83, "y": 0.30 },
+        { "x": 0.92, "y": 0.46 }, { "x": 1.0, "y": 0.58 }
+      ]
+    },
+
+    {
+      "id": "c-newcost", "name": "New Cost", "color": "#ff7a2f", "strokeWidth": 3.5,
+      "glow": 11, "opacity": 0.95, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": false, "group": "renewal",
+      "anchors": [
+        { "x": 0.62, "y": 0.05 }, { "x": 0.70, "y": 0.24 }, { "x": 0.78, "y": 0.11 },
+        { "x": 0.88, "y": 0.05 }, { "x": 1.0, "y": 0.04 }
+      ]
+    },
+    {
+      "id": "c-newresist", "name": "New Resistance", "color": "#3f8cff", "strokeWidth": 3.5,
+      "glow": 11, "opacity": 0.9, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": false, "group": "renewal",
+      "anchors": [
+        { "x": 0.64, "y": 0.04 }, { "x": 0.74, "y": 0.09 }, { "x": 0.80, "y": 0.21 },
+        { "x": 0.86, "y": 0.12 }, { "x": 0.94, "y": 0.06 }, { "x": 1.0, "y": 0.05 }
+      ]
+    },
+    {
+      "id": "c-futureval", "name": "Future Value", "color": "#ffb24d", "strokeWidth": 4,
+      "glow": 12, "opacity": 1, "blendMode": "screen", "visible": true, "locked": false,
+      "smoothing": "spline", "highlight": true, "group": "renewal",
+      "anchors": [
+        { "x": 0.62, "y": 0.07 }, { "x": 0.74, "y": 0.10 }, { "x": 0.85, "y": 0.05 },
+        { "x": 0.92, "y": 0.13 }, { "x": 1.0, "y": 0.26 }
+      ]
+    }
+  ],
+  "export": { "pngScale": 2 }
+}
