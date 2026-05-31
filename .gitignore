@@ -1,0 +1,7 @@
+# macOS / editor junk
+.DS_Store
+*.swp
+*~
+
+# Local autosave / scratch exports (the app stores scenes in localStorage)
+*.local.json

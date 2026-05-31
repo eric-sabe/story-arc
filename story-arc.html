@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Story Arc</title>
+<meta name="description" content="A local, SVG-first editor for composing cinematic, keynote-style narrative curves. Shape glowing Bézier curves, theme them light or dark, and export clean SVG or PNG." />
+<meta name="theme-color" content="#05070d" />
+<meta name="color-scheme" content="dark light" />
+<!-- Social / link-preview cards. On deploy, set og:url + og:image to ABSOLUTE URLs for crawlers. -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Story Arc" />
+<meta property="og:description" content="Compose cinematic, keynote-style narrative curves — editable Bézier geometry, light/dark themes, clean SVG/PNG export." />
+<meta property="og:image" content="assets/favicon-512.png" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Story Arc" />
+<meta name="twitter:description" content="Compose cinematic, keynote-style narrative curves — editable Bézier geometry, light/dark themes, clean SVG/PNG export." />
+<meta name="twitter:image" content="assets/favicon-512.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+<link rel="manifest" href="assets/site.webmanifest" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============ TOP TOOLBAR ============ -->
+  <div id="toolbar-wrap">
+  <header id="toolbar">
+    <div class="brand">
+      <img class="brand-mark" src="assets/favicon-192.png" alt="Story Arc icon" width="28" height="28" />
+      <span class="brand-app">Story Arc</span>
+      <input id="visual-name" class="visual-name" placeholder="Untitled visual"
+             title="Name of this visual — shown here and saved with the scene JSON" />
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn" data-action="undo" id="btn-undo" title="Undo (⌘Z / Ctrl+Z)" disabled>↶ Undo</button>
+      <button class="btn" data-action="redo" id="btn-redo" title="Redo (⌘⇧Z / Ctrl+Y)" disabled>↷ Redo</button>
+    </div>
+
+    <div class="toolbar-group">
+      <button class="btn" id="btn-zoomlock" data-action="toggle-zoomlock" title="Lock zoom so scroll/trackpad gestures don't zoom (L)">🔓</button>
+      <button class="btn" data-action="zoom-out" title="Zoom out (−)">−</button>
+      <span id="zoom-readout" class="readout">100%</span>
+      <button class="btn" data-action="zoom-in" title="Zoom in (+)">+</button>
+      <button class="btn" data-action="reset-view" title="Reset view (0)">Reset view</button>
+    </div>
+
+    <div class="toolbar-group toggles">
+      <label class="chk" title="Show/hide the chart grid lines"><input type="checkbox" id="t-grid" checked /> Grid</label>
+      <label class="chk" title="Show/hide the X and Y axes"><input type="checkbox" id="t-axes" checked /> Axes</label>
+      <label class="chk" title="Show/hide milestone guide lines and labels"><input type="checkbox" id="t-guides" checked /> Guides</label>
+      <label class="chk" title="Show/hide the dark background, ambient haze and vignette"><input type="checkbox" id="t-bg" checked /> Background</label>
+      <label class="chk" title="Show/hide the soft neon glow pass on curves and labels"><input type="checkbox" id="t-glow" checked /> Glow</label>
+      <label class="chk" title="Show/hide all per-curve word labels at once"><input type="checkbox" id="t-labels" checked /> Labels</label>
+      <label class="chk" title="Magnetic snapping: weld an anchor onto another curve's anchor, or align to milestone x, the phase divider, other anchors, and grid lines"><input type="checkbox" id="t-snap" /> Snap</label>
+      <label class="chk" title="Show only the selected curve (hide all others on the canvas)"><input type="checkbox" id="t-solo" /> Solo</label>
+    </div>
+
+    <div class="toolbar-group right">
+      <button class="btn" data-action="save-scene" title="Save scene JSON">Save JSON</button>
+      <button class="btn" data-action="load-scene" title="Load scene JSON">Load JSON</button>
+      <button class="btn" data-action="reset-scene" title="Reload starter scene">Reset scene</button>
+      <input type="file" id="file-input" accept="application/json,.json" hidden />
+    </div>
+  </header>
+    <div class="tb-fade tb-fade-left">
+      <button class="tb-scroll" data-scroll="-1" tabindex="-1" aria-label="Scroll toolbar left" title="Scroll toolbar left">‹</button>
+    </div>
+    <div class="tb-fade tb-fade-right">
+      <button class="tb-scroll" data-scroll="1" tabindex="-1" aria-label="Scroll toolbar right" title="Scroll toolbar right">›</button>
+    </div>
+  </div>
+
+  <div id="layout">
+    <!-- ============ CANVAS ============ -->
+    <main id="stage">
+      <div id="canvas-wrap">
+        <!-- SVG is built/managed by app.js -->
+        <svg id="art" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div id="hint">drag empty space to pan · scroll to zoom · click a curve to select · drag dots to shape</div>
+    </main>
+
+    <!-- ============ CONTROL PANEL ============ -->
+    <aside id="panel">
+      <!-- Layers -->
+      <section class="card">
+        <div class="card-head">
+          <h2>Curve Layers</h2>
+          <div class="row gap" style="margin:0">
+            <button class="btn small" data-action="add-layer" title="Add a new layer (groups curves & milestones)">+ Layer</button>
+            <button class="btn small" data-action="add-curve" title="Add a new curve to the selected curve's layer">+ Curve</button>
+          </div>
+        </div>
+        <ul id="layer-list" class="layer-list"></ul>
+        <div class="row gap">
+          <button class="btn small" data-action="dup-curve" title="Duplicate the selected curve">Duplicate</button>
+          <button class="btn small" data-action="del-curve" title="Delete the selected curve (Del / Backspace)">Delete</button>
+          <button class="btn small" data-action="up-curve" title="Bring selected curve forward (up in draw order)">▲</button>
+          <button class="btn small" data-action="down-curve" title="Send selected curve back (down in draw order)">▼</button>
+        </div>
+        <p class="muted tiny">Each <b>layer</b> header is editable — rename it and the Milestones panel updates to match. Use the <b>Layer</b> dropdown below to move a curve between layers.</p>
+      </section>
+
+      <!-- Theme -->
+      <section class="card">
+        <div class="card-head"><h2>Theme</h2></div>
+        <label class="field" title="Switch the whole palette at once. Overwrites every curve color and the chart chrome (background, grid, axes, guides, labels).">
+          <span>Color theme (overwrites curve colors)</span>
+          <select id="theme-select" title="Switch the whole palette at once. Overwrites every curve color and the chart chrome."></select>
+        </label>
+        <div class="row gap">
+          <button class="btn small" data-action="save-theme" title="Save the current colors as a reusable custom theme (stored in your browser)">Save as theme…</button>
+          <button class="btn small" id="btn-del-theme" data-action="del-theme" title="Delete the selected custom theme (built-in themes can't be deleted)">Delete theme</button>
+        </div>
+        <p class="muted tiny">Themes recolor curves by their <b>color role</b> (set per curve below). Tweak any colors, then <b>Save as theme</b> to reuse them later.</p>
+      </section>
+
+      <!-- Visual Title -->
+      <section class="card">
+        <div class="card-head">
+          <h2>Visual Title</h2>
+          <label class="chk" title="Show the visual's name as a title on the chart"><input type="checkbox" id="vt-show" /> Show</label>
+        </div>
+        <div id="vt-controls">
+          <div class="row">
+            <label class="field grow" title="Title text color">
+              <span>Color</span>
+              <input type="color" id="vt-color" title="Title text color" />
+            </label>
+            <label class="field" title="Title font size (artboard px)">
+              <span>Size</span>
+              <input type="number" id="vt-size" min="8" max="240" step="1" title="Title font size (artboard px)" />
+            </label>
+          </div>
+          <div class="row gap">
+            <label class="chk" title="Soft glow behind the title"><input type="checkbox" id="vt-glow" /> Glow</label>
+            <label class="chk" title="Bold weight"><input type="checkbox" id="vt-bold" /> Bold</label>
+          </div>
+          <p class="muted tiny">The title text is the <b>visual name</b> (top-left). Drag it on the canvas to position it — it obeys Snap and exports with the chart.</p>
+        </div>
+      </section>
+
+      <!-- Selected curve properties -->
+      <section class="card" id="props-card">
+        <div class="card-head"><h2>Selected Curve</h2></div>
+        <div id="props-empty" class="muted">No curve selected.</div>
+        <div id="props" hidden>
+          <label class="field" title="Curve display name, shown in the layers list">
+            <span>Name</span>
+            <input type="text" id="p-name" title="Curve display name, shown in the layers list" />
+          </label>
+          <div class="row">
+            <label class="field grow" title="Curve stroke color. Note: applying a theme overwrites this — Save as theme to keep custom colors.">
+              <span>Stroke color</span>
+              <input type="color" id="p-color" title="Curve stroke color (overwritten when you apply a theme)" />
+            </label>
+            <label class="field" title="Curve opacity, 0 (transparent) to 1 (solid)">
+              <span>Opacity</span>
+              <input type="range" id="p-opacity" min="0" max="1" step="0.01" title="Curve opacity, 0–1" />
+            </label>
+          </div>
+          <div class="row">
+            <label class="field grow" title="Thickness of the curve's main stroke">
+              <span>Stroke width <em id="p-width-val"></em></span>
+              <input type="range" id="p-width" min="0.5" max="14" step="0.5" title="Thickness of the curve's main stroke" />
+            </label>
+            <label class="field grow" title="Glow blur radius behind the curve (0 = no glow)">
+              <span>Glow <em id="p-glow-val"></em></span>
+              <input type="range" id="p-glow" min="0" max="40" step="1" title="Glow blur radius behind the curve (0 = no glow)" />
+            </label>
+          </div>
+          <div class="row">
+            <label class="field grow" title="How the curve blends with layers beneath it. 'screen' gives the additive neon look.">
+              <span>Blend mode</span>
+              <select id="p-blend" title="How the curve blends with layers beneath. 'screen' = additive neon glow.">
+                <option value="normal">normal</option>
+                <option value="screen">screen</option>
+                <option value="lighten">lighten</option>
+                <option value="plus-lighter">plus-lighter</option>
+                <option value="overlay">overlay</option>
+              </select>
+            </label>
+            <label class="field grow" title="spline = control handles auto-derived from anchors (drag anchors only); bezier = drag each handle manually">
+              <span>Smoothing</span>
+              <select id="p-smoothing" title="spline = handles auto-derived from anchors; bezier = drag handles manually">
+                <option value="spline">spline (auto handles)</option>
+                <option value="bezier">bezier (manual handles)</option>
+              </select>
+            </label>
+          </div>
+          <div class="row gap">
+            <label class="chk" title="Add a thin bright inner stroke over the curve for extra punch"><input type="checkbox" id="p-highlight" /> Highlight pass</label>
+            <label class="chk" title="Keep each anchor's two Bézier handles symmetric (bezier mode)"><input type="checkbox" id="p-mirror" /> Mirror handles</label>
+          </div>
+          <div class="row">
+            <label class="field grow" title="Which layer this curve belongs to; groups it in the layers list (and milestones use the same layers)">
+              <span>Layer</span>
+              <select id="p-group" title="Which layer this curve belongs to">
+                <option value="primary">Phase 1 · Primary Crucible</option>
+                <option value="decline">Phase 2 · Complacency / Decline</option>
+                <option value="renewal">Phase 2 · Renewing the Crucible</option>
+              </select>
+            </label>
+            <label class="field grow" title="Which theme color slot this curve uses. Curves sharing a role stay matched across themes (e.g. Cost & New Cost).">
+              <span>Color role</span>
+              <select id="p-role" title="Theme color slot; curves sharing a role stay matched across themes">
+                <option value="cost">Cost (orange)</option>
+                <option value="resistance">Resistance (blue)</option>
+                <option value="confidence">Confidence (cyan)</option>
+                <option value="value">Value (gold)</option>
+                <option value="accent">Accent (violet)</option>
+              </select>
+            </label>
+          </div>
+          <div class="row gap">
+            <button class="btn small" data-action="add-anchor" title="Add an anchor point at the curve's longest gap">+ Anchor</button>
+            <button class="btn small" data-action="del-anchor" title="Remove the curve's last anchor point">− Anchor</button>
+            <span class="muted" id="anchor-readout"></span>
+          </div>
+          <div class="field" title="Regenerate this curve's Bézier handles with a preset 'feel'">
+            <span>Easing preset (regenerates handles)</span>
+            <select id="p-easing" title="Regenerate Bézier handles with a preset feel">
+              <option value="">— choose —</option>
+              <option value="linear">linear</option>
+              <option value="smooth">smooth</option>
+              <option value="easeInOut">ease in-out</option>
+              <option value="dramatic">dramatic</option>
+            </select>
+          </div>
+
+          <div class="sub-head">
+            <span>Labels</span>
+            <button class="btn small" data-action="add-label" title="Add a text label on this curve (styled in the curve's color)">+ Word</button>
+          </div>
+          <ul id="label-list" class="label-list"></ul>
+          <p class="muted tiny">Labels use the curve's color &amp; glow. Drag the square handle on the canvas to reposition.</p>
+        </div>
+      </section>
+
+      <!-- Branch -->
+      <section class="card" id="branch-card">
+        <div class="card-head">
+          <h2>Branch</h2>
+          <label class="chk" title="Turn the whole Branch feature on or off"><input type="checkbox" id="r-enabled" checked /> Enabled</label>
+        </div>
+        <div id="branch-controls">
+          <div class="row gap">
+            <label class="chk" title="Show the dashed line marking where one layer hands off to the next"><input type="checkbox" id="r-divider" checked /> Divider</label>
+            <label class="chk" title="Tint the area past the split so the second act reads distinctly"><input type="checkbox" id="r-tint" checked /> Tint</label>
+            <label class="chk" title="Show the glowing fork node at the handoff point"><input type="checkbox" id="r-branch" checked /> Node</label>
+          </div>
+          <div class="row">
+            <label class="field" title="Normalized x (0–1) of the handoff; positions the divider and branch node"><span>Split x</span><input type="number" id="r-branchx" min="0" max="1" step="0.01" title="Normalized x (0–1) of the split / divider" /></label>
+            <label class="field" title="Normalized height (0–1) of the branch node"><span>Node y</span><input type="number" id="r-branchy" min="0" max="1" step="0.01" title="Normalized height (0–1) of the branch node" /></label>
+          </div>
+        </div>
+        <p class="muted tiny" id="branch-note">A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one layer gives way to the next. Needs at least two layers; with a single layer it's off and curves span the whole canvas.</p>
+      </section>
+
+      <!-- Milestones -->
+      <section class="card">
+        <div class="card-head">
+          <h2>Milestones</h2>
+          <button class="btn small" data-action="add-milestone" title="Add a milestone marker on the x-axis">+ Add</button>
+        </div>
+        <ul id="milestone-list" class="milestone-list"></ul>
+      </section>
+
+      <!-- Export -->
+      <section class="card">
+        <div class="card-head"><h2>Export</h2></div>
+        <div class="export-grid">
+          <button class="btn export" data-action="export-svg-clean" title="Export curves + labels only, transparent (no grid/axes/background)">SVG · clean</button>
+          <button class="btn export" data-action="export-svg-pres" title="Export the full styled slide (background, grid, axes, guides, glow) as SVG">SVG · presentation</button>
+          <button class="btn export" data-action="export-png-trans" title="Export curves + labels only as a transparent PNG (needs a local server, not file://)">PNG · transparent</button>
+          <button class="btn export" data-action="export-png-full" title="Export the full dark slide as a PNG (needs a local server, not file://)">PNG · full slide</button>
+        </div>
+        <label class="field" title="PNG output resolution = artboard size × this multiplier (2× of 1920×1080 = 3840×2160)">
+          <span>PNG scale <em id="png-scale-val">2×</em></span>
+          <input type="range" id="png-scale" min="1" max="4" step="1" value="2" title="PNG resolution multiplier (artboard size × this)" />
+        </label>
+      </section>
+
+      <!-- Axes & Scale -->
+      <section class="card">
+        <div class="card-head">
+          <h2>Axes &amp; Scale</h2>
+          <label class="chk" title="Show Y-axis tick marks and the Low/High scale labels"><input type="checkbox" id="ax-ticks" checked /> Ticks</label>
+        </div>
+        <label class="field" title="X-axis title (the horizontal axis)">
+          <span>X-axis title</span>
+          <input type="text" id="ax-x" title="X-axis title" />
+        </label>
+        <label class="field" title="Y-axis title (the vertical axis)">
+          <span>Y-axis title</span>
+          <input type="text" id="ax-y" title="Y-axis title" />
+        </label>
+        <div class="row">
+          <label class="field grow" title="Label at the bottom of the Y axis (the low end of the scale)">
+            <span>Y low label</span>
+            <input type="text" id="ax-ylow" title="Bottom-of-axis scale label" />
+          </label>
+          <label class="field grow" title="Label at the top of the Y axis (the high end of the scale)">
+            <span>Y high label</span>
+            <input type="text" id="ax-yhigh" title="Top-of-axis scale label" />
+          </label>
+        </div>
+        <p class="muted tiny">The Y axis is a relative 0–1 scale; the Low/High labels (and ticks) tell readers what the height means.</p>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Artboard</h2></div>
+        <div class="row">
+          <label class="field" title="Artboard width in pixels (default 1920). Changing it rebuilds the view."><span>Width</span><input type="number" id="ab-w" title="Artboard width in pixels (default 1920)" /></label>
+          <label class="field" title="Artboard height in pixels (default 1080). Changing it rebuilds the view."><span>Height</span><input type="number" id="ab-h" title="Artboard height in pixels (default 1080)" /></label>
+        </div>
+        <p class="muted tiny">Edit <code>DEFAULT_SCENE</code> / <code>scene-default.json</code> for permanent defaults. See README.</p>
+      </section>
+    </aside>
+  </div>
+
+  <div id="mobile-note">↻ Story Arc is built for a larger screen — best on desktop. Editing works on touch, but the layout is cramped here.</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
