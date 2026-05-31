@@ -259,6 +259,7 @@ function getThemeById(id) { return allThemes().find((t) => t.id === id) || BUILT
 const state = {
   scene: null,
   selectedCurveId: null,
+  selectedMilestoneId: null, // for the Milestones panel reorder/delete bar
   activeJunction: null, // id of the welded junction whose floating handle is shown
   view: { x: 0, y: 0, w: 1920, h: 1080 }, // viewBox
   ui: {
@@ -1981,7 +1982,17 @@ const actions = {
   'del-theme': () => deleteCurrentTheme(),
   'add-milestone': () => {
     const group = getSelected()?.group || sceneLayers()[0]?.id || 'primary';
-    state.scene.milestones.push({ id: uid('ms'), label: 'New', x: 0.5, showGuide: true, phase: 'primary', group });
+    const ms = { id: uid('ms'), label: 'New', x: 0.5, showGuide: true, phase: 'primary', group };
+    state.scene.milestones.push(ms);
+    state.selectedMilestoneId = ms.id;
+    renderGuides(); syncMilestones(); scheduleAutosave();
+  },
+  'ms-up':   () => { const m = selectedMilestone(); if (m) milestoneMove(m, -1); },
+  'ms-down': () => { const m = selectedMilestone(); if (m) milestoneMove(m, +1); },
+  'ms-del':  () => {
+    const m = selectedMilestone(); if (!m) return;
+    state.scene.milestones = state.scene.milestones.filter((x) => x.id !== m.id);
+    state.selectedMilestoneId = null;
     renderGuides(); syncMilestones(); scheduleAutosave();
   },
   'save-scene': saveScene,
@@ -2185,18 +2196,21 @@ function syncMilestones() {
   const list = document.getElementById('milestone-list');
   list.innerHTML = '';
 
-  // Single compact line: visibility · label · x · y · guide · delete.
-  // (The milestone's layer is shown by the group header it sits under, so no
-  // per-row layer control is needed.)
+  // Compact, selectable single-line row (mirrors Curve Layers): visibility ·
+  // label · x · y · guide. The layer is shown by the group header, and reorder /
+  // move-between-layers / delete live in the shared action bar below the list.
   const makeRow = (ms) => {
     const li = document.createElement('li');
-    li.className = 'ms-item';
+    li.className = 'ms-item' + (ms.id === state.selectedMilestoneId ? ' selected' : '');
+    li.dataset.id = ms.id;
+    // selecting (without rebuilding, so focusing a field still works)
+    li.addEventListener('mousedown', () => selectMilestone(ms.id));
 
     const show = document.createElement('button');
     show.className = 'layer-vis' + (ms.visible !== false ? ' on' : '');
     show.textContent = ms.visible !== false ? '👁' : '◌';
     show.title = 'Show / hide milestone';
-    show.addEventListener('click', () => { ms.visible = !(ms.visible !== false); renderGuides(); syncMilestones(); scheduleAutosave(); });
+    show.addEventListener('click', (e) => { e.stopPropagation(); ms.visible = !(ms.visible !== false); renderGuides(); syncMilestones(); scheduleAutosave(); });
 
     const label = document.createElement('input');
     label.type = 'text'; label.value = ms.label; label.title = 'Milestone label text';
@@ -2215,29 +2229,9 @@ function syncMilestones() {
     guide.className = 'layer-vis' + (ms.showGuide ? ' on' : '');
     guide.textContent = ms.showGuide ? '┊' : '·';
     guide.title = 'Toggle the dashed guide line';
-    guide.addEventListener('click', () => { ms.showGuide = !ms.showGuide; renderGuides(); syncMilestones(); scheduleAutosave(); });
+    guide.addEventListener('click', (e) => { e.stopPropagation(); ms.showGuide = !ms.showGuide; renderGuides(); syncMilestones(); scheduleAutosave(); });
 
-    // layer assignment — send this milestone to any layer
-    const grp = document.createElement('select');
-    grp.className = 'ms-group';
-    grp.title = 'Move this milestone to another layer';
-    for (const l of sceneLayers()) { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; grp.appendChild(o); }
-    grp.value = ms.group;
-    grp.addEventListener('change', () => { ms.group = grp.value; renderGuides(); syncMilestones(); scheduleAutosave(); });
-
-    // reorder within the layer
-    const up = document.createElement('button');
-    up.className = 'ms-move'; up.textContent = '▲'; up.title = 'Move up (crosses into the layer above at the top)';
-    up.addEventListener('click', () => milestoneMove(ms, -1));
-    const down = document.createElement('button');
-    down.className = 'ms-move'; down.textContent = '▼'; down.title = 'Move down (crosses into the layer below at the bottom)';
-    down.addEventListener('click', () => milestoneMove(ms, +1));
-
-    const del = document.createElement('button');
-    del.className = 'ms-del'; del.textContent = '✕'; del.title = 'Delete this milestone';
-    del.addEventListener('click', () => { state.scene.milestones = state.scene.milestones.filter((m) => m.id !== ms.id); renderGuides(); syncMilestones(); scheduleAutosave(); });
-
-    li.append(show, label, x, y, guide, grp, up, down, del);
+    li.append(show, label, x, y, guide);
     return li;
   };
 
@@ -2251,6 +2245,25 @@ function syncMilestones() {
     list.appendChild(head);
     members.forEach((m) => list.appendChild(makeRow(m)));
   }
+  syncMilestoneActions();
+}
+
+function selectedMilestone() { return state.scene.milestones.find((m) => m.id === state.selectedMilestoneId) || null; }
+
+// Highlight the selected milestone row + enable the action bar, without
+// rebuilding the list (so a field click can still focus normally).
+function selectMilestone(id) {
+  state.selectedMilestoneId = id;
+  document.querySelectorAll('#milestone-list .ms-item').forEach((li) => li.classList.toggle('selected', li.dataset.id === id));
+  syncMilestoneActions();
+}
+
+function syncMilestoneActions() {
+  const has = !!selectedMilestone();
+  ['ms-up', 'ms-down', 'ms-del'].forEach((a) => {
+    const b = document.querySelector(`[data-action="${a}"]`);
+    if (b) b.disabled = !has;
+  });
 }
 
 // --- artboard size ---

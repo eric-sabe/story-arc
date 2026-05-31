@@ -256,16 +256,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .layer-name-input:focus { outline: none; border-color: var(--accent); background: #0b0f1c; color: var(--text); text-transform: none; letter-spacing: 0; }
 
 /* ---------- Milestone list (single compact line) ---------- */
-.ms-item { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding: 5px 0; border-bottom: 1px solid #161d31; }
-.ms-item:last-child { border-bottom: none; }
-.ms-item input[type="text"] { flex: 1 1 90px; background: #0b0f1c; border: 1px solid var(--line); border-radius: 5px; color: var(--text); padding: 4px 6px; font-size: 12px; min-width: 0; }
+.ms-item { display: flex; align-items: center; gap: 4px; padding: 4px 5px; border: 1px solid transparent; border-radius: 7px; cursor: pointer; }
+.ms-item:hover { background: var(--panel-2); }
+.ms-item.selected { background: #16203a; border-color: #2f3f6b; }
+.ms-item input[type="text"] { flex: 1 1 auto; background: #0b0f1c; border: 1px solid var(--line); border-radius: 5px; color: var(--text); padding: 4px 6px; font-size: 12px; min-width: 0; }
 .ms-item input[type="number"] { width: 44px; flex: 0 0 auto; background: #0b0f1c; border: 1px solid var(--line); border-radius: 5px; color: var(--text); padding: 4px 3px; font-size: 11px; }
 .ms-item .layer-vis { flex: 0 0 auto; font-size: 12px; }
-.ms-group { flex: 0 1 auto; max-width: 112px; background: #0b0f1c; border: 1px solid var(--line); border-radius: 5px; color: var(--text); padding: 3px 4px; font-size: 11px; }
-.ms-move { flex: 0 0 auto; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 11px; padding: 0 1px; }
-.ms-move:hover { color: var(--accent-2); }
-.ms-del { background: none; border: none; color: var(--text-dim); cursor: pointer; }
-.ms-del:hover { color: var(--danger); }
 
 /* Phase-2 layer band axis-title controls (Branch panel) */
 .band-axis-controls { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }

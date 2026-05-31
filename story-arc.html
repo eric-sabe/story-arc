@@ -268,6 +268,12 @@
           <button class="btn small" data-action="add-milestone" title="Add a milestone marker on the x-axis">+ Add</button>
         </div>
         <ul id="milestone-list" class="milestone-list"></ul>
+        <div class="row gap">
+          <button class="btn small" data-action="ms-up" title="Move the selected milestone up (crosses into the layer above at the top)" disabled>▲</button>
+          <button class="btn small" data-action="ms-down" title="Move the selected milestone down (crosses into the layer below at the bottom)" disabled>▼</button>
+          <button class="btn small" data-action="ms-del" title="Delete the selected milestone" disabled>Delete</button>
+        </div>
+        <p class="muted tiny">Click a milestone to select it, then use <b>▲ ▼</b> to reorder it — crossing into the next layer at a boundary — or <b>Delete</b> to remove it.</p>
       </section>
 
       <!-- Export -->
