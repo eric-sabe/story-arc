@@ -192,13 +192,20 @@ one. Theme switches are undoable.
 
 The **Branch** panel adds a visual "handoff" where the story forks into separate
 tracks — useful for multi-act stories like the default scene's post-mastery split.
-It renders a dashed **divider**, a subtle **tint** over the region past the split,
+It renders a strong **divider**, a subtle **tint** over the region past the split,
 and a glowing focal **node** with connectors.
 
 - A master **Enabled** toggle turns the whole feature on/off.
 - Branch needs **2+ layers**. With a single layer it auto-disables and the chart is
   one continuous space with curves spanning the full canvas.
 - Controls: Divider · Tint · Node, plus the normalized **Split x** and **Node y**.
+- The **divider** is a solid, glowing vertical **seam** at the split x — the line the
+  Phase-2 tracks read as a continuation of Phase 1. Its color is drawn from the
+  theme's axis token, so it flexes light/dark. Curves can **snap-anchor** to this x
+  (it's a snap target) without having to weld.
+- **Phase-2 layer bands.** The region right of the divider is split into one
+  horizontal **band per non-primary layer**, stacked top→bottom in layer order, each
+  with its **own Y axis** repeated on the right edge (see *Axes & scale*).
 
 ---
 
@@ -208,6 +215,13 @@ The **Axes & Scale** panel edits the **X-axis title** and **Y-axis title**, plus
 Y-axis **Low / High** endpoint labels and a **Ticks** toggle. The Y axis is a
 relative 0–1 scale, so the Low/High labels are how you tell readers what the height
 means. Stored in `scene.axes`.
+
+**Per-layer right-edge axes.** When Branch is on (2+ layers), the primary Y axis is
+**repeated separately for each Phase-2 layer band** on the right edge — line +
+arrowhead, ticks, the same `Low`/`High` labels (mirrored to the right), and the
+layer's name as a rotated band title. Each band is an even vertical slice of the
+post-divider region, so the right side reads as stacked sub-charts. These honor the
+**Ticks** toggle and the global **Axes** toggle, and export with the slide.
 
 ---
 

@@ -639,6 +639,47 @@ function renderAxes() {
   const xLabel = el('text', { x: (x0 + x1) / 2, y: ab.height - 34, fill: s.labelColor, 'font-size': 22, 'font-family': 'Helvetica, Arial, sans-serif', 'letter-spacing': '2', 'text-anchor': 'middle' });
   xLabel.textContent = ax.xLabel || '';
   L.axes.appendChild(xLabel);
+
+  // Per-layer vertical axes on the right edge of the Phase-2 region — the
+  // primary's Y scale, repeated separately for each stacked layer band.
+  if (branchEnabled()) {
+    for (const band of phase2Bands()) renderBandAxis(band, x1, ax, s);
+  }
+}
+
+// One repeated Y axis at the right edge for a Phase-2 layer band: line + arrow,
+// tick marks, Low/High endpoint labels (mirrored to the right), and the layer
+// name as the band's rotated title. Matches the primary axis styling/theme.
+function renderBandAxis(band, xR, ax, s) {
+  const yTop = band.top, yBot = band.bottom;
+  L.axes.appendChild(el('line', { x1: xR, y1: yBot, x2: xR, y2: yTop - 10, stroke: s.axisColor, 'stroke-width': 2.5, 'marker-end': 'url(#axis-arrow)' }));
+
+  if (ax.showTicks !== false) {
+    const ticks = state.scene.style.gridY;
+    for (let j = 0; j <= ticks; j++) {
+      const yt = yBot - (yBot - yTop) * (j / ticks);
+      L.axes.appendChild(el('line', { x1: xR, y1: yt, x2: xR + 7, y2: yt, stroke: s.axisColor, 'stroke-width': 1.5, 'stroke-opacity': 0.8 }));
+    }
+  }
+
+  const lab = (text, yy, baseline) => {
+    if (!text) return;
+    const t = el('text', { x: xR + 14, y: yy, fill: s.labelColor, 'font-size': 17, 'font-family': 'Helvetica, Arial, sans-serif', 'text-anchor': 'start', 'dominant-baseline': baseline });
+    t.textContent = text;
+    L.axes.appendChild(t);
+  };
+  lab(ax.yHigh, yTop + 4, 'hanging');
+  lab(ax.yLow, yBot - 2, 'auto');
+
+  // band title = the layer's name, rotated up the right side (its "Phase N ·"
+  // prefix trimmed so it reads as the track name).
+  const name = (band.layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || band.layer.name || '';
+  if (name) {
+    const cy = (yTop + yBot) / 2, tx = xR + 74;
+    const title = el('text', { x: tx, y: cy, fill: s.labelColor, 'font-size': 18, 'font-family': 'Helvetica, Arial, sans-serif', 'letter-spacing': '2', 'text-anchor': 'middle', transform: `rotate(90 ${tx} ${cy})` });
+    title.textContent = name.toUpperCase();
+    L.axes.appendChild(title);
+  }
 }
 
 function renderGuides() {
@@ -685,6 +726,24 @@ function branchEnabled() {
   return r.enabled !== false && sceneLayers().length >= 2;
 }
 
+// The Phase-2 region (right of the divider) is split into one horizontal band
+// per non-primary layer, stacked top→bottom in layer order. Each band gets its
+// own right-edge vertical axis. Returns [{ layer, top, bottom }] in user space.
+function phase2Bands() {
+  const layers = sceneLayers();
+  if (layers.length < 2) return [];
+  const ab = state.scene.artboard, p = ab.padding;
+  const y0 = p.top, y1 = ab.height - p.bottom;
+  const phase2 = layers.slice(1); // every layer after the primary
+  const n = phase2.length;
+  const gap = n > 1 ? 26 : 0;     // breathing room between stacked bands
+  const bandH = (y1 - y0 - gap * (n - 1)) / n;
+  return phase2.map((layer, i) => {
+    const top = y0 + i * (bandH + gap);
+    return { layer, top, bottom: top + bandH };
+  });
+}
+
 // Branch region tint + the handoff divider.
 function renderRegions() {
   const ab = state.scene.artboard, p = ab.padding;
@@ -714,9 +773,21 @@ function renderRegions() {
     L.regions.appendChild(el('rect', { x: bx, y: y0, width: Math.max(0, x1 - bx), height: y1 - y0, fill: `url(#${gid})` }));
   }
 
-  // handoff divider
+  // handoff divider — a strong luminous seam the Phase-2 layers anchor to.
+  // Colour comes from the theme's axis token so it flexes light/dark.
   if (r.divider) {
-    L.regions.appendChild(el('line', { x1: bx, y1: y0 - 18, x2: bx, y2: y1, stroke: '#5b6b94', 'stroke-width': 1.5, 'stroke-dasharray': '2 10', 'stroke-opacity': 0.5 }));
+    const light = state.scene.mode === 'light';
+    const s = state.scene.style;
+    const col = s.axisColor;
+    if (!L.defs.querySelector('#divider-glow')) {
+      const f = el('filter', { id: 'divider-glow', x: '-400%', y: '-20%', width: '900%', height: '140%' });
+      f.appendChild(el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 5 }));
+      L.defs.appendChild(f);
+    }
+    const yTop = y0 - 18, yBot = y1;
+    // soft glow pass behind, then a crisp solid line on top
+    L.regions.appendChild(el('line', { x1: bx, y1: yTop, x2: bx, y2: yBot, stroke: col, 'stroke-width': light ? 3 : 4, 'stroke-opacity': light ? 0.28 : 0.55, filter: 'url(#divider-glow)' }));
+    L.regions.appendChild(el('line', { x1: bx, y1: yTop, x2: bx, y2: yBot, stroke: col, 'stroke-width': 2, 'stroke-opacity': light ? 0.9 : 0.95 }));
   }
 }
 
