@@ -800,15 +800,21 @@
   "canvases": [
     {
       "id": "primary",
-      "name": "Phase 1 · Primary Crucible"
+      "name": "Phase 1 · Primary Crucible",
+      "axisTitle": "",
+      "axisTitleShow": true
     },
     {
       "id": "decline",
-      "name": "Phase 2 · Complacency / Decline"
+      "name": "Phase 2 · Complacency / Decline",
+      "axisTitle": "",
+      "axisTitleShow": true
     },
     {
       "id": "renewal",
-      "name": "Phase 2 · Renewing the Crucible"
+      "name": "Phase 2 · Renewing the Crucible",
+      "axisTitle": "",
+      "axisTitleShow": true
     }
   ],
   "export": {
