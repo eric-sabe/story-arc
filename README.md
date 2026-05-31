@@ -148,9 +148,10 @@ curves **and** milestones.
 Named markers along the x-axis (the *Milestones* panel), **grouped under the same
 layer headers** as the curves. Each row: visibility · label · `x` (0–1) · `y`
 (blank = sits on the axis; a value floats the label at that height) · guide-line
-toggle · **layer** dropdown · **`▲ ▼`** reorder-within-layer · delete. `+ Add`
-creates one in the selected curve's layer; use the per-row **layer** dropdown to send
-it to any other layer.
+toggle · **layer** dropdown · **`▲ ▼`** reorder · delete. The `▲ ▼` buttons reorder
+within a layer and **cross into the adjacent layer at the boundary** (same as Curve
+Layers); the **layer** dropdown jumps it straight to any layer. `+ Add` creates one
+in the selected curve's layer.
 
 You can also **drag a milestone label directly on the canvas** (hover shows a faint
 grab box) — it moves the milestone's x and sets its label height, obeys **Snap**

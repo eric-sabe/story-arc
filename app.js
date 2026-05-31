@@ -1083,12 +1083,6 @@ function renderOverlay() {
       box.dataset.kind = 'label'; box.dataset.lidx = li; box.style.cursor = 'move';
       box.setAttribute('pointer-events', 'all');
       withTip(box, `Label “${lab.text || ''}” — drag to reposition, double-click to edit text`);
-      box.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        const cur = getSelected(); const l = cur && cur.labels && cur.labels[li];
-        if (!l) return;
-        startCanvasTextEdit(box, l.text, (val) => { l.text = val; renderLabels(); renderOverlay(); syncLabels(); scheduleAutosave(); });
-      });
       L.overlay.appendChild(box);
     });
   }
@@ -1243,10 +1237,6 @@ function renderMilestoneHandles(upp) {
     box.setAttribute('pointer-events', 'all');
     box.setAttribute('vector-effect', 'non-scaling-stroke');
     withTip(box, `Milestone “${ms.label}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}, double-click to edit text`);
-    box.addEventListener('dblclick', (e) => {
-      e.stopPropagation();
-      startCanvasTextEdit(box, ms.label, (val) => { ms.label = val; renderGuides(); renderOverlay(); syncMilestones(); scheduleAutosave(); });
-    });
     L.overlay.appendChild(box);
   }
 }
@@ -1268,15 +1258,6 @@ function renderTitleHandle(upp) {
   box.setAttribute('pointer-events', 'all');
   box.setAttribute('vector-effect', 'non-scaling-stroke');
   withTip(box, `Title “${text}” — drag to move${state.ui.snap ? ' (Snap on)' : ''}, double-click to edit text`);
-  box.addEventListener('dblclick', (e) => {
-    e.stopPropagation();
-    startCanvasTextEdit(box, (state.scene.meta && state.scene.meta.name) || '', (val) => {
-      state.scene.meta = state.scene.meta || {};
-      state.scene.meta.name = val;
-      syncVisualName();
-      renderTitle(); renderOverlay(); scheduleAutosave();
-    });
-  });
   L.overlay.appendChild(box);
 }
 
@@ -1491,6 +1472,19 @@ svg.addEventListener('pointerdown', (evt) => {
     return;
   }
 
+  // 0b) double-click a text element (label / milestone / title) → edit in place.
+  // Detected here (not via a native dblclick listener) because these elements are
+  // re-rendered on every pointer-up, which would break dblclick targeting.
+  const ekind = target.dataset && target.dataset.kind;
+  if (ekind === 'label' || ekind === 'mslabel' || ekind === 'title') {
+    const key = ekind + ':' + (target.dataset.msid || target.dataset.lidx || 'title');
+    if (isDoubleTap(key, evt.timeStamp)) {
+      evt.preventDefault();
+      startInPlaceEditForTarget(target);
+      return; // edit instead of starting a drag
+    }
+  }
+
   // 1) overlay handle / anchor / label drag
   if (target.dataset && target.dataset.kind) {
     evt.preventDefault();
@@ -1693,6 +1687,34 @@ function selectCurve(id) {
 
 /* ---- in-place text editing ---- */
 
+// Manual double-click detection keyed by a logical identity (not the DOM node),
+// because the clicked element is often re-rendered between the two clicks (the
+// overlay rebuilds on pointer-up; the layer list rebuilds on select), which
+// suppresses the native `dblclick` event.
+let _dtap = { key: null, t: 0 };
+function isDoubleTap(key, ts) {
+  const dbl = _dtap.key === key && (ts - _dtap.t) < 450;
+  _dtap = dbl ? { key: null, t: 0 } : { key, t: ts };
+  return dbl;
+}
+
+// Start the right in-place editor for an on-canvas overlay element.
+function startInPlaceEditForTarget(el) {
+  const kind = el.dataset.kind;
+  if (kind === 'label') {
+    const cur = getSelected(); const l = cur && cur.labels && cur.labels[+el.dataset.lidx];
+    if (l) startCanvasTextEdit(el, l.text, (val) => { l.text = val; renderLabels(); renderOverlay(); syncLabels(); scheduleAutosave(); });
+  } else if (kind === 'mslabel') {
+    const ms = state.scene.milestones.find((m) => m.id === el.dataset.msid);
+    if (ms) startCanvasTextEdit(el, ms.label, (val) => { ms.label = val; renderGuides(); renderOverlay(); syncMilestones(); scheduleAutosave(); });
+  } else if (kind === 'title') {
+    startCanvasTextEdit(el, (state.scene.meta && state.scene.meta.name) || '', (val) => {
+      state.scene.meta = state.scene.meta || {}; state.scene.meta.name = val;
+      syncVisualName(); renderTitle(); renderOverlay(); scheduleAutosave();
+    });
+  }
+}
+
 // Float a text input over an on-canvas element (label / milestone / title) so
 // it can be edited where it sits. Commits on Enter or blur, cancels on Esc.
 let activeTextEdit = null;
@@ -1759,14 +1781,7 @@ function syncLayerList() {
     const nm = document.createElement('span');
     nm.className = 'layer-name';
     nm.textContent = curve.name;
-    nm.title = 'Double-click to rename';
-    nm.addEventListener('dblclick', (e) => {
-      e.stopPropagation();
-      inlineEditSpan(nm, curve.name, (val) => {
-        curve.name = val.trim() || curve.name;
-        renderLabels(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
-      });
-    });
+    nm.title = 'Click to select · double-click to rename';
 
     const vis = document.createElement('button');
     vis.className = 'layer-vis' + (curve.visible ? ' on' : '');
@@ -1775,7 +1790,20 @@ function syncLayerList() {
     vis.addEventListener('click', (e) => { e.stopPropagation(); curve.visible = !curve.visible; renderCurves(); syncLayerList(); scheduleAutosave(); });
 
     li.append(sw, nm, vis);
-    li.addEventListener('click', () => selectCurve(curve.id));
+    li.addEventListener('click', (e) => {
+      // double-click a row → rename it inline (detected manually because the list
+      // is rebuilt on select, which would destroy the element mid-dblclick)
+      if (isDoubleTap('curve:' + curve.id, e.timeStamp)) {
+        selectCurve(curve.id); // ensure selected + rebuild
+        const span = document.querySelector(`#layer-list .layer-item[data-id="${curve.id}"] .layer-name`);
+        if (span) inlineEditSpan(span, curve.name, (val) => {
+          curve.name = val.trim() || curve.name;
+          renderLabels(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
+        });
+        return;
+      }
+      selectCurve(curve.id);
+    });
     return li;
   };
 
@@ -2121,15 +2149,35 @@ for (const [id, key] of Object.entries(toggleMap)) {
 }
 
 // --- milestones list (grouped by the SAME layers as Curve Layers) ---
-// Swap a milestone with its neighbour within the same layer (delta -1 up / +1 down).
-function milestoneMove(ms, delta) {
+// Move a milestone one step in the Milestones list — same UX as Curve Layers:
+// reorder within its layer, and at a layer boundary cross into the adjacent
+// layer (changing its group). dir: -1 = up, +1 = down.
+function milestoneMove(ms, dir) {
   const arr = state.scene.milestones;
-  const members = arr.filter((m) => m.group === ms.group);
-  const gi = members.indexOf(ms);
-  const target = members[gi + delta];
-  if (!target) return;
-  const i = arr.indexOf(ms), j = arr.indexOf(target);
-  [arr[i], arr[j]] = [arr[j], arr[i]];
+  const layers = sceneLayers();
+  const li = layers.findIndex((l) => l.id === ms.group);
+  const members = arr.filter((m) => m.group === ms.group); // visual order = array order
+  const vi = members.indexOf(ms);
+
+  const swap = (other) => { const i = arr.indexOf(ms), j = arr.indexOf(other); [arr[i], arr[j]] = [arr[j], arr[i]]; };
+  const moveToLayerEnd = (layerId, end) => {
+    ms.group = layerId;
+    const k = arr.indexOf(ms); arr.splice(k, 1);
+    const mem = arr.filter((m) => m.group === layerId);
+    if (!mem.length) { arr.push(ms); return; }
+    if (end === 'top') arr.splice(arr.indexOf(mem[0]), 0, ms);
+    else arr.splice(arr.indexOf(mem[mem.length - 1]) + 1, 0, ms);
+  };
+
+  if (dir < 0) {                    // UP
+    if (vi > 0) swap(members[vi - 1]);
+    else if (li > 0) moveToLayerEnd(layers[li - 1].id, 'bottom');
+    else return;
+  } else {                          // DOWN
+    if (vi < members.length - 1) swap(members[vi + 1]);
+    else if (li < layers.length - 1) moveToLayerEnd(layers[li + 1].id, 'top');
+    else return;
+  }
   renderGuides(); syncMilestones(); scheduleAutosave();
 }
 
@@ -2179,10 +2227,10 @@ function syncMilestones() {
 
     // reorder within the layer
     const up = document.createElement('button');
-    up.className = 'ms-move'; up.textContent = '▲'; up.title = 'Move up within this layer';
+    up.className = 'ms-move'; up.textContent = '▲'; up.title = 'Move up (crosses into the layer above at the top)';
     up.addEventListener('click', () => milestoneMove(ms, -1));
     const down = document.createElement('button');
-    down.className = 'ms-move'; down.textContent = '▼'; down.title = 'Move down within this layer';
+    down.className = 'ms-move'; down.textContent = '▼'; down.title = 'Move down (crosses into the layer below at the bottom)';
     down.addEventListener('click', () => milestoneMove(ms, +1));
 
     const del = document.createElement('button');
