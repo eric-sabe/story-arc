@@ -175,10 +175,11 @@ const DEFAULT_SCENE = {
       anchors: [ a(0.62,0.07), a(0.74,0.10), a(0.85,0.05), a(0.92,0.13), a(1.0,0.26) ],
     },
   ],
-  // Layers group curves AND milestones. Each curve/milestone references a
-  // layer by id via its `group` field. Layers are user-editable (add / rename /
-  // delete) — see scene.layers handling in normalizeScene + the layers panel.
-  layers: [
+  // Canvases group curves AND milestones. Each curve/milestone references a
+  // canvas by id via its `group` field. Canvases are user-editable (add / rename
+  // / delete) — see scene.canvases handling in normalizeScene + the Composition
+  // panel. (Older scenes that used `layers` still load — see normalizeScene.)
+  canvases: [
     { id: 'primary', name: 'Phase 1 · Primary Crucible' },
     { id: 'decline', name: 'Phase 2 · Complacency / Decline' },
     { id: 'renewal', name: 'Phase 2 · Renewing the Crucible' },
@@ -186,16 +187,16 @@ const DEFAULT_SCENE = {
   export: { pngScale: 2 },
 };
 
-// Default layer set + names, used to seed/migrate scenes that lack `layers`.
-const DEFAULT_LAYERS = [
+// Default canvas set + names, used to seed/migrate scenes that lack `canvases`.
+const DEFAULT_CANVASES = [
   { id: 'primary', name: 'Phase 1 · Primary Crucible' },
   { id: 'decline', name: 'Phase 2 · Complacency / Decline' },
   { id: 'renewal', name: 'Phase 2 · Renewing the Crucible' },
 ];
 
 // Convenience accessors for the active scene's layers.
-function sceneLayers() { return state.scene.layers || []; }
-function layerName(id) { const l = sceneLayers().find((x) => x.id === id); return l ? l.name : id; }
+function sceneCanvases() { return state.scene.canvases || []; }
+function canvasName(id) { const l = sceneCanvases().find((x) => x.id === id); return l ? l.name : id; }
 
 /* ============================================================================
    [THEMES]
@@ -672,11 +673,11 @@ function renderBandAxis(band, xR, ax, s) {
   lab(ax.yHigh, yTop + 4, 'hanging');
   lab(ax.yLow, yBot - 2, 'auto');
 
-  // band title (rotated up the right side). An explicit layer.axisTitle wins;
-  // otherwise derive from the layer name (trimming any "Phase N ·" prefix).
-  // Hidden when the layer's axisTitleShow is off.
-  const derived = (band.layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || band.layer.name || '';
-  const name = band.layer.axisTitleShow === false ? '' : ((band.layer.axisTitle || '').trim() || derived);
+  // band title (rotated up the right side). An explicit canvas.axisTitle wins;
+  // otherwise derive from the canvas name (trimming any "Phase N ·" prefix).
+  // Hidden when the canvas's axisTitleShow is off.
+  const derived = (band.canvas.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || band.canvas.name || '';
+  const name = band.canvas.axisTitleShow === false ? '' : ((band.canvas.axisTitle || '').trim() || derived);
   if (name) {
     const cy = (yTop + yBot) / 2, tx = xR + 74;
     const title = el('text', { x: tx, y: cy, fill: s.labelColor, 'font-size': 18, 'font-family': 'Helvetica, Arial, sans-serif', 'letter-spacing': '2', 'text-anchor': 'middle', transform: `rotate(90 ${tx} ${cy})` });
@@ -726,24 +727,24 @@ function renderGuides() {
 // continuous space spanning the full canvas.
 function branchEnabled() {
   const r = state.scene.regions || {};
-  return r.enabled !== false && sceneLayers().length >= 2;
+  return r.enabled !== false && sceneCanvases().length >= 2;
 }
 
 // The Phase-2 region (right of the divider) is split into one horizontal band
 // per non-primary layer, stacked top→bottom in layer order. Each band gets its
 // own right-edge vertical axis. Returns [{ layer, top, bottom }] in user space.
 function phase2Bands() {
-  const layers = sceneLayers();
-  if (layers.length < 2) return [];
+  const canvases = sceneCanvases();
+  if (canvases.length < 2) return [];
   const ab = state.scene.artboard, p = ab.padding;
   const y0 = p.top, y1 = ab.height - p.bottom;
-  const phase2 = layers.slice(1); // every layer after the primary
+  const phase2 = canvases.slice(1); // every canvas after the primary
   const n = phase2.length;
   const gap = n > 1 ? 26 : 0;     // breathing room between stacked bands
   const bandH = (y1 - y0 - gap * (n - 1)) / n;
-  return phase2.map((layer, i) => {
+  return phase2.map((canvas, i) => {
     const top = y0 + i * (bandH + gap);
-    return { layer, top, bottom: top + bandH };
+    return { canvas, top, bottom: top + bandH };
   });
 }
 
@@ -1682,7 +1683,7 @@ function selectCurve(id) {
   state.selectedCurveId = id;
   renderCurves();      // selection emphasis
   renderOverlay();
-  syncLayerList();
+  syncCanvasList();
   syncPropsPanel();
 }
 
@@ -1745,7 +1746,7 @@ function startCanvasTextEdit(svgEl, current, commit) {
   activeTextEdit = { cancel: () => finish(false) };
 }
 
-// Swap a list-row name span for an input to rename it inline (Curve Layers).
+// Swap a list-row name span for an input to rename it inline (Composition).
 function inlineEditSpan(span, current, commit) {
   const input = document.createElement('input');
   input.type = 'text'; input.value = current || ''; input.className = 'layer-name-input';
@@ -1754,7 +1755,7 @@ function inlineEditSpan(span, current, commit) {
   let done = false;
   const finish = (save) => {
     if (done) return; done = true;
-    if (save) commit(input.value); else syncLayerList();
+    if (save) commit(input.value); else syncCanvasList();
   };
   input.addEventListener('keydown', (e) => {
     e.stopPropagation();
@@ -1764,7 +1765,7 @@ function inlineEditSpan(span, current, commit) {
   input.addEventListener('blur', () => finish(true));
 }
 
-function syncLayerList() {
+function syncCanvasList() {
   const list = document.getElementById('layer-list');
   list.innerHTML = '';
 
@@ -1788,7 +1789,7 @@ function syncLayerList() {
     vis.className = 'layer-vis' + (curve.visible ? ' on' : '');
     vis.textContent = curve.visible ? '👁' : '◌';
     vis.title = 'Toggle visibility';
-    vis.addEventListener('click', (e) => { e.stopPropagation(); curve.visible = !curve.visible; renderCurves(); syncLayerList(); scheduleAutosave(); });
+    vis.addEventListener('click', (e) => { e.stopPropagation(); curve.visible = !curve.visible; renderCurves(); syncCanvasList(); scheduleAutosave(); });
 
     li.append(sw, nm, vis);
     li.addEventListener('click', (e) => {
@@ -1799,7 +1800,7 @@ function syncLayerList() {
         const span = document.querySelector(`#layer-list .layer-item[data-id="${curve.id}"] .layer-name`);
         if (span) inlineEditSpan(span, curve.name, (val) => {
           curve.name = val.trim() || curve.name;
-          renderLabels(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
+          renderLabels(); syncCanvasList(); syncPropsPanel(); scheduleAutosave();
         });
         return;
       }
@@ -1808,54 +1809,61 @@ function syncLayerList() {
     return li;
   };
 
-  // Group curves by layer, in scene.layers order. Each layer header has an
-  // editable name, a whole-layer visibility toggle, and a delete button.
-  for (const layer of sceneLayers()) {
-    const members = state.scene.curves.filter((c) => c.group === layer.id);
+  // Group curves by canvas, in scene.canvases order. Each canvas header has an
+  // editable name, a whole-canvas visibility toggle, and a delete button.
+  for (const canvas of sceneCanvases()) {
+    const members = state.scene.curves.filter((c) => c.group === canvas.id);
 
     const head = document.createElement('li');
     head.className = 'layer-group-head';
 
     const nameInput = document.createElement('input');
-    nameInput.type = 'text'; nameInput.value = layer.name; nameInput.className = 'layer-name-input';
-    nameInput.title = 'Rename this layer (also updates the Milestones grouping)';
-    nameInput.addEventListener('input', () => { layer.name = nameInput.value; syncMilestones(); syncPropsPanel(); syncBandAxisControls(); renderAxes(); scheduleAutosave(); });
+    nameInput.type = 'text'; nameInput.value = canvas.name; nameInput.className = 'layer-name-input';
+    nameInput.title = 'Rename this canvas (also updates the Milestones grouping)';
+    nameInput.addEventListener('input', () => { canvas.name = nameInput.value; syncMilestones(); syncPropsPanel(); syncBandAxisControls(); renderAxes(); scheduleAutosave(); });
 
     const allVisible = members.length && members.every((c) => c.visible);
     const gvis = document.createElement('button');
     gvis.className = 'layer-vis' + (allVisible ? ' on' : '');
     gvis.textContent = allVisible ? '👁' : '◌';
-    gvis.title = 'Show / hide all curves in this layer';
-    gvis.addEventListener('click', (e) => { e.stopPropagation(); members.forEach((c) => c.visible = !allVisible); renderCurves(); syncLayerList(); scheduleAutosave(); });
+    gvis.title = 'Show / hide all curves in this canvas';
+    gvis.addEventListener('click', (e) => { e.stopPropagation(); members.forEach((c) => c.visible = !allVisible); renderCurves(); syncCanvasList(); scheduleAutosave(); });
 
     const del = document.createElement('button');
-    del.className = 'ms-del'; del.textContent = '✕'; del.title = 'Delete this layer (its curves & milestones move to the first layer)';
-    del.addEventListener('click', (e) => { e.stopPropagation(); deleteLayer(layer.id); });
+    del.className = 'ms-del'; del.textContent = '✕'; del.title = 'Delete this canvas (its curves & milestones move to the first canvas)';
+    del.addEventListener('click', (e) => { e.stopPropagation(); deleteCanvas(canvas.id); });
 
     head.append(nameInput, gvis, del);
     list.appendChild(head);
 
-    // front-most (later in array) shown at top within each layer
+    // front-most (later in array) shown at top within each canvas
     [...members].reverse().forEach((c) => list.appendChild(makeRow(c)));
   }
+  syncAddCanvasButton();
 }
 
-// --- layer (group) management ---
-function addLayer() {
-  state.scene.layers.push({ id: uid('layer'), name: 'New Layer' });
-  renderAll(); syncLayerList(); syncMilestones(); syncPropsPanel(); syncRegionControls(); scheduleAutosave();
+// --- canvas (group) management ---
+const MAX_CANVASES = 3;
+function syncAddCanvasButton() {
+  const b = document.querySelector('[data-action="add-canvas"]');
+  if (b) b.disabled = sceneCanvases().length >= MAX_CANVASES;
 }
-function deleteLayer(id) {
-  if (sceneLayers().length <= 1) { alert('At least one layer is required.'); return; }
-  const layer = sceneLayers().find((l) => l.id === id);
-  const fallback = sceneLayers().find((l) => l.id !== id).id;
+function addCanvas() {
+  if (sceneCanvases().length >= MAX_CANVASES) { alert(`A composition is limited to ${MAX_CANVASES} canvases.`); return; }
+  state.scene.canvases.push({ id: uid('canvas'), name: 'New Canvas' });
+  renderAll(); syncCanvasList(); syncMilestones(); syncPropsPanel(); syncRegionControls(); scheduleAutosave();
+}
+function deleteCanvas(id) {
+  if (sceneCanvases().length <= 1) { alert('At least one canvas is required.'); return; }
+  const canvas = sceneCanvases().find((l) => l.id === id);
+  const fallback = sceneCanvases().find((l) => l.id !== id).id;
   const nCurves = state.scene.curves.filter((c) => c.group === id).length;
   const nMs = state.scene.milestones.filter((m) => m.group === id).length;
-  if ((nCurves || nMs) && !confirm(`Delete layer “${layer.name}”? Its ${nCurves} curve(s) and ${nMs} milestone(s) will move to “${layerName(fallback)}”.`)) return;
+  if ((nCurves || nMs) && !confirm(`Delete canvas “${canvas.name}”? Its ${nCurves} curve(s) and ${nMs} milestone(s) will move to “${canvasName(fallback)}”.`)) return;
   state.scene.curves.forEach((c) => { if (c.group === id) c.group = fallback; });
   state.scene.milestones.forEach((m) => { if (m.group === id) m.group = fallback; });
-  state.scene.layers = sceneLayers().filter((l) => l.id !== id);
-  renderAll(); syncLayerList(); syncMilestones(); syncPropsPanel(); syncRegionControls(); scheduleAutosave();
+  state.scene.canvases = sceneCanvases().filter((l) => l.id !== id);
+  renderAll(); syncCanvasList(); syncMilestones(); syncPropsPanel(); syncRegionControls(); scheduleAutosave();
 }
 
 function syncPropsPanel() {
@@ -1877,7 +1885,7 @@ function syncPropsPanel() {
   // rebuild the Layer dropdown from the current scene layers
   const pg = document.getElementById('p-group');
   pg.innerHTML = '';
-  for (const l of sceneLayers()) { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; pg.appendChild(o); }
+  for (const l of sceneCanvases()) { const o = document.createElement('option'); o.value = l.id; o.textContent = l.name; pg.appendChild(o); }
   pg.value = curve.group;
   document.getElementById('p-role').value = curve.role || 'accent';
   document.getElementById('p-easing').value = curve.easing || '';
@@ -1895,8 +1903,8 @@ function bindProp(id, fn) {
     renderCurves(); renderOverlay(); scheduleAutosave();
   });
 }
-bindProp('p-name', (c, e) => { c.name = e.value; syncLayerList(); });
-bindProp('p-color', (c, e) => { c.color = e.value; syncLayerList(); });
+bindProp('p-name', (c, e) => { c.name = e.value; syncCanvasList(); });
+bindProp('p-color', (c, e) => { c.color = e.value; syncCanvasList(); });
 bindProp('p-opacity', (c, e) => { c.opacity = +e.value; });
 bindProp('p-width', (c, e) => { c.strokeWidth = +e.value; document.getElementById('p-width-val').textContent = e.value; });
 bindProp('p-glow', (c, e) => { c.glow = +e.value; document.getElementById('p-glow-val').textContent = e.value; });
@@ -1905,7 +1913,7 @@ bindProp('p-highlight', (c, e) => { c.highlight = e.checked; });
 document.getElementById('p-group').addEventListener('change', (e) => {
   const c = getSelected(); if (!c) return;
   c.group = e.target.value;
-  syncLayerList(); scheduleAutosave();
+  syncCanvasList(); scheduleAutosave();
 });
 document.getElementById('p-role').addEventListener('change', (e) => {
   const c = getSelected(); if (!c) return;
@@ -1913,7 +1921,7 @@ document.getElementById('p-role').addEventListener('change', (e) => {
   // give immediate feedback by recoloring from the active theme's role color
   const t = getThemeById(state.scene.theme);
   if (t && t.roles[c.role]) { c.color = t.roles[c.role]; document.getElementById('p-color').value = c.color; }
-  renderCurves(); renderLabels(); syncLayerList(); scheduleAutosave();
+  renderCurves(); renderLabels(); syncCanvasList(); scheduleAutosave();
 });
 document.getElementById('p-smoothing').addEventListener('change', (e) => {
   const c = getSelected(); if (!c) return;
@@ -1937,7 +1945,7 @@ function addCurve(src) {
   const base = src || {
     name: 'New Curve', color: '#9d8bff', strokeWidth: 4, glow: 12, opacity: 1,
     blendMode: 'screen', visible: true, locked: false, smoothing: 'spline', highlight: false,
-    group: getSelected()?.group || sceneLayers()[0]?.id || 'primary',
+    group: getSelected()?.group || sceneCanvases()[0]?.id || 'primary',
     anchors: [ a(0.0, 0.2), a(0.5, 0.5), a(1.0, 0.7) ],
   };
   const c = clone(base);
@@ -1945,7 +1953,7 @@ function addCurve(src) {
   if (src) c.name = src.name + ' copy';
   state.scene.curves.push(c);
   selectCurve(c.id);
-  renderCurves(); syncLayerList();
+  renderCurves(); syncCanvasList();
   scheduleAutosave();
 }
 
@@ -1961,13 +1969,13 @@ const actions = {
     syncZoomLock();
   },
   'add-curve': () => addCurve(),
-  'add-layer': () => addLayer(),
+  'add-canvas': () => addCanvas(),
   'dup-curve': () => { const c = getSelected(); if (c) addCurve(c); },
   'del-curve': () => {
     const c = getSelected(); if (!c) return;
     state.scene.curves = state.scene.curves.filter((x) => x.id !== c.id);
     state.selectedCurveId = state.scene.curves.length ? state.scene.curves[state.scene.curves.length - 1].id : null;
-    renderCurves(); syncLayerList(); syncPropsPanel(); renderOverlay(); scheduleAutosave();
+    renderCurves(); syncCanvasList(); syncPropsPanel(); renderOverlay(); scheduleAutosave();
   },
   'up-curve':   () => reorder(+1),
   'down-curve': () => reorder(-1),
@@ -1981,7 +1989,7 @@ const actions = {
   'save-theme': () => saveThemeFromScene(),
   'del-theme': () => deleteCurrentTheme(),
   'add-milestone': () => {
-    const group = getSelected()?.group || sceneLayers()[0]?.id || 'primary';
+    const group = getSelected()?.group || sceneCanvases()[0]?.id || 'primary';
     const ms = { id: uid('ms'), label: 'New', x: 0.5, showGuide: true, phase: 'primary', group };
     state.scene.milestones.push(ms);
     state.selectedMilestoneId = ms.id;
@@ -2106,25 +2114,25 @@ function syncLabels() {
   });
 }
 
-// Move the selected curve one step in the Curve-Layers list. Within a layer it
-// swaps draw order; at a layer boundary it crosses into the adjacent layer
-// (changing the curve's group) so ▲▼ can relocate a curve between layers.
+// Move the selected curve one step in the Composition list. Within a canvas it
+// swaps draw order; at a canvas boundary it crosses into the adjacent canvas
+// (changing the curve's group) so ▲▼ can relocate a curve between canvases.
 // dir: +1 = up the list (toward the top), -1 = down.
 function reorder(dir) {
   const c = getSelected(); if (!c) return;
   const arr = state.scene.curves;
-  const layers = sceneLayers();
-  const li = layers.findIndex((l) => l.id === c.group);
-  // members of c's layer, top→bottom as rendered (array order reversed)
+  const canvases = sceneCanvases();
+  const li = canvases.findIndex((l) => l.id === c.group);
+  // members of c's canvas, top→bottom as rendered (array order reversed)
   const vis = arr.filter((x) => x.group === c.group).reverse();
   const vi = vis.indexOf(c);
 
   const swap = (other) => { const i = arr.indexOf(c), j = arr.indexOf(other); arr[i] = other; arr[j] = c; };
-  // Move c next to its new layer's block at a visual end ('top' or 'bottom').
-  const moveToLayerEnd = (layerId, end) => {
-    c.group = layerId;
+  // Move c next to its new canvas's block at a visual end ('top' or 'bottom').
+  const moveToCanvasEnd = (canvasId, end) => {
+    c.group = canvasId;
     const k = arr.indexOf(c); arr.splice(k, 1);
-    const members = arr.filter((x) => x.group === layerId);
+    const members = arr.filter((x) => x.group === canvasId);
     if (!members.length) { arr.push(c); return; }
     if (end === 'bottom') arr.splice(arr.indexOf(members[0]), 0, c);        // visual bottom = first in array
     else arr.splice(arr.indexOf(members[members.length - 1]) + 1, 0, c);    // visual top = last in array
@@ -2132,14 +2140,14 @@ function reorder(dir) {
 
   if (dir > 0) {                    // UP
     if (vi > 0) swap(vis[vi - 1]);
-    else if (li > 0) moveToLayerEnd(layers[li - 1].id, 'bottom');
+    else if (li > 0) moveToCanvasEnd(canvases[li - 1].id, 'bottom');
     else return;
   } else {                          // DOWN
     if (vi < vis.length - 1) swap(vis[vi + 1]);
-    else if (li < layers.length - 1) moveToLayerEnd(layers[li + 1].id, 'top');
+    else if (li < canvases.length - 1) moveToCanvasEnd(canvases[li + 1].id, 'top');
     else return;
   }
-  renderCurves(); renderOverlay(); syncLayerList(); syncPropsPanel(); scheduleAutosave();
+  renderCurves(); renderOverlay(); syncCanvasList(); syncPropsPanel(); scheduleAutosave();
 }
 
 // toolbar/button delegation
@@ -2159,22 +2167,22 @@ for (const [id, key] of Object.entries(toggleMap)) {
   });
 }
 
-// --- milestones list (grouped by the SAME layers as Curve Layers) ---
-// Move a milestone one step in the Milestones list — same UX as Curve Layers:
-// reorder within its layer, and at a layer boundary cross into the adjacent
-// layer (changing its group). dir: -1 = up, +1 = down.
+// --- milestones list (grouped by the SAME canvases as Composition) ---
+// Move a milestone one step in the Milestones list — same UX as Composition:
+// reorder within its canvas, and at a canvas boundary cross into the adjacent
+// canvas (changing its group). dir: -1 = up, +1 = down.
 function milestoneMove(ms, dir) {
   const arr = state.scene.milestones;
-  const layers = sceneLayers();
-  const li = layers.findIndex((l) => l.id === ms.group);
+  const canvases = sceneCanvases();
+  const li = canvases.findIndex((l) => l.id === ms.group);
   const members = arr.filter((m) => m.group === ms.group); // visual order = array order
   const vi = members.indexOf(ms);
 
   const swap = (other) => { const i = arr.indexOf(ms), j = arr.indexOf(other); [arr[i], arr[j]] = [arr[j], arr[i]]; };
-  const moveToLayerEnd = (layerId, end) => {
-    ms.group = layerId;
+  const moveToCanvasEnd = (canvasId, end) => {
+    ms.group = canvasId;
     const k = arr.indexOf(ms); arr.splice(k, 1);
-    const mem = arr.filter((m) => m.group === layerId);
+    const mem = arr.filter((m) => m.group === canvasId);
     if (!mem.length) { arr.push(ms); return; }
     if (end === 'top') arr.splice(arr.indexOf(mem[0]), 0, ms);
     else arr.splice(arr.indexOf(mem[mem.length - 1]) + 1, 0, ms);
@@ -2182,11 +2190,11 @@ function milestoneMove(ms, dir) {
 
   if (dir < 0) {                    // UP
     if (vi > 0) swap(members[vi - 1]);
-    else if (li > 0) moveToLayerEnd(layers[li - 1].id, 'bottom');
+    else if (li > 0) moveToCanvasEnd(canvases[li - 1].id, 'bottom');
     else return;
   } else {                          // DOWN
     if (vi < members.length - 1) swap(members[vi + 1]);
-    else if (li < layers.length - 1) moveToLayerEnd(layers[li + 1].id, 'top');
+    else if (li < canvases.length - 1) moveToCanvasEnd(canvases[li + 1].id, 'top');
     else return;
   }
   renderGuides(); syncMilestones(); scheduleAutosave();
@@ -2196,7 +2204,7 @@ function syncMilestones() {
   const list = document.getElementById('milestone-list');
   list.innerHTML = '';
 
-  // Compact, selectable single-line row (mirrors Curve Layers): visibility ·
+  // Compact, selectable single-line row (mirrors Composition): visibility ·
   // label · x · y · guide. The layer is shown by the group header, and reorder /
   // move-between-layers / delete live in the shared action bar below the list.
   const makeRow = (ms) => {
@@ -2235,8 +2243,8 @@ function syncMilestones() {
     return li;
   };
 
-  // group by layer, in scene.layers order, using the same names as Curve Layers
-  for (const layer of sceneLayers()) {
+  // group by layer, in scene.layers order, using the same names as Composition
+  for (const layer of sceneCanvases()) {
     const members = state.scene.milestones.filter((m) => m.group === layer.id);
     if (!members.length) continue;
     const head = document.createElement('li');
@@ -2311,7 +2319,7 @@ document.getElementById('r-branchy').addEventListener('input', (e) => {
 
 function syncRegionControls() {
   const r = state.scene.regions;
-  const multi = sceneLayers().length >= 2;           // branch needs 2+ layers
+  const multi = sceneCanvases().length >= 2;           // branch needs 2+ layers
   const en = document.getElementById('r-enabled');
   en.checked = r.enabled !== false && multi;
   en.disabled = !multi;
@@ -2325,8 +2333,8 @@ function syncRegionControls() {
   document.getElementById('r-branchx').value = r.branchX;
   document.getElementById('r-branchy').value = r.branch.y;
   document.getElementById('branch-note').textContent = multi
-    ? 'A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one layer gives way to the next.'
-    : 'Branch is unavailable with a single layer — the chart is one continuous space and curves span the whole canvas. Add a second layer to enable it.';
+    ? 'A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one canvas gives way to the next.'
+    : 'Branch is unavailable with a single canvas — the chart is one continuous space and curves span the whole artboard. Add a second canvas to enable it.';
   syncBandAxisControls();
 }
 
@@ -2336,26 +2344,26 @@ function syncBandAxisControls() {
   const wrap = document.getElementById('band-axis-controls');
   if (!wrap) return;
   wrap.innerHTML = '';
-  const bands = branchEnabled() ? sceneLayers().slice(1) : [];
+  const bands = branchEnabled() ? sceneCanvases().slice(1) : [];
   if (!bands.length) return;
   const head = document.createElement('div');
-  head.className = 'field-label tiny'; head.textContent = 'Layer axis titles (right edge)';
+  head.className = 'field-label tiny'; head.textContent = 'Canvas axis titles (right edge)';
   wrap.appendChild(head);
-  for (const layer of bands) {
+  for (const canvas of bands) {
     const row = document.createElement('div');
     row.className = 'row band-axis-row';
     const show = document.createElement('label');
-    show.className = 'chk'; show.title = 'Show this layer’s right-edge axis title';
+    show.className = 'chk'; show.title = 'Show this canvas’s right-edge axis title';
     const cb = document.createElement('input');
-    cb.type = 'checkbox'; cb.checked = layer.axisTitleShow !== false;
-    cb.addEventListener('change', () => { layer.axisTitleShow = cb.checked; renderAxes(); scheduleAutosave(); });
+    cb.type = 'checkbox'; cb.checked = canvas.axisTitleShow !== false;
+    cb.addEventListener('change', () => { canvas.axisTitleShow = cb.checked; renderAxes(); scheduleAutosave(); });
     show.appendChild(cb);
     const title = document.createElement('input');
     title.type = 'text'; title.className = 'grow';
-    title.placeholder = (layer.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || layer.name;
-    title.value = layer.axisTitle || '';
-    title.title = 'Right-edge axis title for this layer (blank = layer name)';
-    title.addEventListener('input', () => { layer.axisTitle = title.value; renderAxes(); scheduleAutosave(); });
+    title.placeholder = (canvas.name || '').replace(/^\s*phase\s*\d+\s*[·:.\-]?\s*/i, '').trim() || canvas.name;
+    title.value = canvas.axisTitle || '';
+    title.title = 'Right-edge axis title for this canvas (blank = canvas name)';
+    title.addEventListener('input', () => { canvas.axisTitle = title.value; renderAxes(); scheduleAutosave(); });
     row.append(show, title);
     wrap.appendChild(row);
   }
@@ -2422,7 +2430,7 @@ function applyTheme(theme) {
   // Title color: if it's on auto it follows the new mode at render time (nothing
   // to do); an explicit custom title color is left untouched across theme switches.
   // re-render WITHOUT resetting zoom/pan (don't call rebuildEverything)
-  renderAll(); syncLayerList(); syncPropsPanel(); syncMilestones(); syncThemeUI(); syncTitleControls();
+  renderAll(); syncCanvasList(); syncPropsPanel(); syncMilestones(); syncThemeUI(); syncTitleControls();
   scheduleAutosave();
 }
 
@@ -2501,7 +2509,7 @@ document.addEventListener('keydown', (e) => {
     let changed = false;
     if (state.activeJunction) { state.activeJunction = null; changed = true; }
     if (state.selectedCurveId) { state.selectedCurveId = null; changed = true; }
-    if (changed) { renderCurves(); renderOverlay(); syncLayerList(); syncPropsPanel(); }
+    if (changed) { renderCurves(); renderOverlay(); syncCanvasList(); syncPropsPanel(); }
     return;
   }
 
@@ -2694,31 +2702,32 @@ function normalizeScene(input) {
     divider: reg.divider !== false, tint: reg.tint !== false,
   };
 
-  // ---- Layers (sanitize ids first; remember remaps so group refs can follow) ----
+  // ---- Canvases (sanitize ids first; remember remaps so group refs can follow).
+  // Back-compat: older scenes stored these under `layers`. ----
   const layerIds = new Set(), idMap = new Map();
-  let layers = toArray(s.layers).filter((l) => l && typeof l === 'object');
-  if (!layers.length) layers = DEFAULT_LAYERS.map((l) => ({ ...l }));
-  layers = layers.map((l) => {
-    const id = safeId(l.id, 'layer', layerIds);
+  let canvases = toArray(s.canvases ?? s.layers).filter((l) => l && typeof l === 'object');
+  if (!canvases.length) canvases = DEFAULT_CANVASES.map((l) => ({ ...l }));
+  canvases = canvases.map((l) => {
+    const id = safeId(l.id, 'canvas', layerIds);
     if (typeof l.id === 'string' && l.id !== id) idMap.set(l.id, id);
     return {
-      id, name: str(l.name, 'Layer'),
+      id, name: str(l.name, 'Canvas'),
       // Phase-2 band axis title: text override (blank → derived from name) and
-      // a show flag for the right-edge per-layer axis title.
+      // a show flag for the right-edge per-canvas axis title.
       axisTitle: typeof l.axisTitle === 'string' ? l.axisTitle : '',
       axisTitleShow: l.axisTitleShow !== false,
     };
   });
-  // Resolve a curve/milestone group ref to a real layer id (follow remaps;
-  // auto-create a layer for a safe-but-undeclared group; else use the first layer).
+  // Resolve a curve/milestone group ref to a real canvas id (follow remaps;
+  // auto-create a canvas for a safe-but-undeclared group; else use the first).
   const resolveGroup = (raw) => {
     let g = typeof raw === 'string' ? (idMap.get(raw) || raw) : '';
     if (layerIds.has(g)) return g;
     if (SAFE_ID.test(g)) {
-      const def = DEFAULT_LAYERS.find((d) => d.id === g);
-      layers.push({ id: g, name: def ? def.name : g }); layerIds.add(g); return g;
+      const def = DEFAULT_CANVASES.find((d) => d.id === g);
+      canvases.push({ id: g, name: def ? def.name : g }); layerIds.add(g); return g;
     }
-    return layers[0].id;
+    return canvases[0].id;
   };
 
   const msIds = new Set();
@@ -2770,7 +2779,8 @@ function normalizeScene(input) {
     })),
   }));
 
-  s.layers = layers;
+  s.canvases = canvases;
+  delete s.layers; // normalize to the new key (older scenes loaded via the fallback)
   s.export = { pngScale: clamp(Math.round(num(obj(s.export).pngScale, 2)), 1, 8) };
   return s;
 }
@@ -2876,7 +2886,7 @@ function rebuildEverything() {
   buildSvgScaffold();
   resetView();
   renderAll();
-  syncLayerList();
+  syncCanvasList();
   syncPropsPanel();
   syncMilestones();
   syncRegionControls();

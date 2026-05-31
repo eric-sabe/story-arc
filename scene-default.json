@@ -797,7 +797,7 @@
       ]
     }
   ],
-  "layers": [
+  "canvases": [
     {
       "id": "primary",
       "name": "Phase 1 · Primary Crucible"

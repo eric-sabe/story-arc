@@ -85,23 +85,23 @@
 
     <!-- ============ CONTROL PANEL ============ -->
     <aside id="panel">
-      <!-- Layers -->
+      <!-- Composition -->
       <section class="card">
         <div class="card-head">
-          <h2>Curve Layers</h2>
+          <h2>Composition</h2>
           <div class="row gap" style="margin:0">
-            <button class="btn small" data-action="add-layer" title="Add a new layer (groups curves & milestones)">+ Layer</button>
-            <button class="btn small" data-action="add-curve" title="Add a new curve to the selected curve's layer">+ Curve</button>
+            <button class="btn small" data-action="add-canvas" title="Add a new canvas (groups curves & milestones; up to 3)">+ Canvas</button>
+            <button class="btn small" data-action="add-curve" title="Add a new curve to the selected curve's canvas">+ Curve</button>
           </div>
         </div>
         <ul id="layer-list" class="layer-list"></ul>
         <div class="row gap">
           <button class="btn small" data-action="dup-curve" title="Duplicate the selected curve">Duplicate</button>
           <button class="btn small" data-action="del-curve" title="Delete the selected curve (Del / Backspace)">Delete</button>
-          <button class="btn small" data-action="up-curve" title="Bring selected curve forward (up in draw order)">▲</button>
-          <button class="btn small" data-action="down-curve" title="Send selected curve back (down in draw order)">▼</button>
+          <button class="btn small" data-action="up-curve" title="Move selected curve up (crosses into the canvas above at the top)">▲</button>
+          <button class="btn small" data-action="down-curve" title="Move selected curve down (crosses into the canvas below at the bottom)">▼</button>
         </div>
-        <p class="muted tiny">Each <b>layer</b> header is editable — rename it and the Milestones panel updates to match. Use the <b>Layer</b> dropdown below to move a curve between layers.</p>
+        <p class="muted tiny">Each <b>canvas</b> header is editable — rename it and the Milestones panel updates to match. Use the <b>Canvas</b> dropdown below (or ▲ ▼) to move a curve between canvases. Up to 3 canvases.</p>
       </section>
 
       <!-- Theme -->
@@ -148,9 +148,9 @@
         <div class="card-head"><h2>Selected Curve</h2></div>
         <div id="props-empty" class="muted">No curve selected.</div>
         <div id="props" hidden>
-          <label class="field" title="Curve display name, shown in the layers list">
+          <label class="field" title="Curve display name, shown in the Composition list">
             <span>Name</span>
-            <input type="text" id="p-name" title="Curve display name, shown in the layers list" />
+            <input type="text" id="p-name" title="Curve display name, shown in the Composition list" />
           </label>
           <div class="row">
             <label class="field grow" title="Curve stroke color. Note: applying a theme overwrites this — Save as theme to keep custom colors.">
@@ -173,9 +173,9 @@
             </label>
           </div>
           <div class="row">
-            <label class="field grow" title="How the curve blends with layers beneath it. 'screen' gives the additive neon look.">
+            <label class="field grow" title="How the curve blends with content beneath it. 'screen' gives the additive neon look.">
               <span>Blend mode</span>
-              <select id="p-blend" title="How the curve blends with layers beneath. 'screen' = additive neon glow.">
+              <select id="p-blend" title="How the curve blends with content beneath. 'screen' = additive neon glow.">
                 <option value="normal">normal</option>
                 <option value="screen">screen</option>
                 <option value="lighten">lighten</option>
@@ -196,9 +196,9 @@
             <label class="chk" title="Keep each anchor's two Bézier handles symmetric (bezier mode)"><input type="checkbox" id="p-mirror" /> Mirror handles</label>
           </div>
           <div class="row">
-            <label class="field grow" title="Which layer this curve belongs to; groups it in the layers list (and milestones use the same layers)">
-              <span>Layer</span>
-              <select id="p-group" title="Which layer this curve belongs to">
+            <label class="field grow" title="Which canvas this curve belongs to; groups it in the Composition list (and milestones use the same canvases)">
+              <span>Canvas</span>
+              <select id="p-group" title="Which canvas this curve belongs to">
                 <option value="primary">Phase 1 · Primary Crucible</option>
                 <option value="decline">Phase 2 · Complacency / Decline</option>
                 <option value="renewal">Phase 2 · Renewing the Crucible</option>
@@ -248,7 +248,7 @@
         </div>
         <div id="branch-controls">
           <div class="row gap">
-            <label class="chk" title="Show the dashed line marking where one layer hands off to the next"><input type="checkbox" id="r-divider" checked /> Divider</label>
+            <label class="chk" title="Show the line marking where one canvas hands off to the next"><input type="checkbox" id="r-divider" checked /> Divider</label>
             <label class="chk" title="Tint the area past the split so the second act reads distinctly"><input type="checkbox" id="r-tint" checked /> Tint</label>
             <label class="chk" title="Show the glowing fork node at the handoff point"><input type="checkbox" id="r-branch" checked /> Node</label>
           </div>
@@ -258,7 +258,7 @@
           </div>
           <div id="band-axis-controls" class="band-axis-controls"></div>
         </div>
-        <p class="muted tiny" id="branch-note">A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one layer gives way to the next. Needs at least two layers; with a single layer it's off and curves span the whole canvas.</p>
+        <p class="muted tiny" id="branch-note">A branch marks a handoff where the story forks into separate tracks — the node, divider and tint highlight where one canvas gives way to the next. Needs at least two canvases; with a single canvas it's off and curves span the whole artboard.</p>
       </section>
 
       <!-- Milestones -->
@@ -269,11 +269,11 @@
         </div>
         <ul id="milestone-list" class="milestone-list"></ul>
         <div class="row gap">
-          <button class="btn small" data-action="ms-up" title="Move the selected milestone up (crosses into the layer above at the top)" disabled>▲</button>
-          <button class="btn small" data-action="ms-down" title="Move the selected milestone down (crosses into the layer below at the bottom)" disabled>▼</button>
+          <button class="btn small" data-action="ms-up" title="Move the selected milestone up (crosses into the canvas above at the top)" disabled>▲</button>
+          <button class="btn small" data-action="ms-down" title="Move the selected milestone down (crosses into the canvas below at the bottom)" disabled>▼</button>
           <button class="btn small" data-action="ms-del" title="Delete the selected milestone" disabled>Delete</button>
         </div>
-        <p class="muted tiny">Click a milestone to select it, then use <b>▲ ▼</b> to reorder it — crossing into the next layer at a boundary — or <b>Delete</b> to remove it.</p>
+        <p class="muted tiny">Click a milestone to select it, then use <b>▲ ▼</b> to reorder it — crossing into the next canvas at a boundary — or <b>Delete</b> to remove it.</p>
       </section>
 
       <!-- Export -->

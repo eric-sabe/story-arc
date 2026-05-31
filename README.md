@@ -47,7 +47,7 @@ Two regions:
 
 - **Canvas** (left) — the 1920×1080 artboard with the live SVG chart and the
   editor overlay (anchor/handle dots, drag boxes, snap guides).
-- **Control panel** (right) — stacked cards: Curve Layers · Theme · Visual Title ·
+- **Control panel** (right) — stacked cards: Composition · Theme · Visual Title ·
   Selected Curve · Branch · Milestones · Export · Axes & Scale · Artboard.
 
 A top **toolbar** holds the visual name, undo/redo, zoom controls, and the global
@@ -62,13 +62,13 @@ Snap · Solo (show only the selected curve).
 ## Editing curves
 
 - **Select** — click a curve's stroke on the canvas (there's a generous invisible
-  hit area, so even thin curves are easy to grab), or click its row in *Curve Layers*.
+  hit area, so even thin curves are easy to grab), or click its row in *Composition*.
 - **Shape** — drag the round **anchor** dots. In `bezier` smoothing mode each anchor
   also shows draggable **Bézier handles** with tangent lines.
 - **Pan / zoom** — drag empty canvas to pan; scroll wheel to zoom toward the cursor,
   or use the toolbar `+ / − / Reset view`. Keyboard: `+`, `-`, `0`.
 - **Per-curve style** (Selected-Curve panel): name, stroke color, opacity, stroke
-  width, glow, blend mode, highlight pass, and the curve's **layer** and **color
+  width, glow, blend mode, highlight pass, and the curve's **canvas** and **color
   role** (see below).
 - **Add / remove anchors** — `+ Anchor` inserts at the longest gap; `− Anchor` drops
   the last one.
@@ -85,7 +85,7 @@ Snap · Solo (show only the selected curve).
 `Delete` / `Backspace` removes the selected curve. `v` toggles Solo. **`Esc`**
 deselects the current curve (and dismisses a junction handle).
 
-**Rename a curve** by double-clicking its name in the *Curve Layers* list (or via
+**Rename a curve** by double-clicking its name in the *Composition* list (or via
 the **Name** field in the Selected-Curve panel). **Edit any label on the slide in
 place** — double-click a curve word-label, a milestone label, or the visual title on
 the canvas, type, and press Enter (Esc cancels); the change is written straight to
@@ -104,7 +104,7 @@ PowerPoint-style:
    grid line, the branch/divider x, the **canvas center**, or any **edge** of another
    label/milestone box — left / center / right and top / middle / bottom — so you can
    line up *edges*, not just centers. A cyan guide marks the match.
-3. **Equal spacing** — while dragging a **milestone label**, the labels in its layer
+3. **Equal spacing** — while dragging a **milestone label**, the labels in its canvas
    are measured edge-to-edge; equal gaps are drawn as pink **dimension lines with the
    measurement**, and the dragged label snaps so its gap matches a neighbouring one
    (or centres between two neighbours) — like PowerPoint's distribution guides.
@@ -124,34 +124,35 @@ what the weld snap produces.
 
 ---
 
-## Layers
+## Canvases
 
-Curves are organized into **layers** (the *Curve Layers* panel). Layers group both
-curves **and** milestones.
+Curves are organized into **canvases** (the *Composition* panel). Canvases group both
+curves **and** milestones. A composition holds **up to 3 canvases** (primary + two
+Phase-2 tracks), matching the right-edge band layout.
 
-- **+ Layer** adds one; each layer header name is **editable inline** — renaming it
-  updates the Milestones grouping to match.
-- The header eye toggles the whole layer's visibility; **✕** deletes the layer (its
-  curves and milestones move to the first layer — nothing is lost; the last layer
+- **+ Canvas** adds one (disabled once you reach 3); each canvas header name is
+  **editable inline** — renaming it updates the Milestones grouping to match.
+- The header eye toggles the whole canvas's visibility; **✕** deletes the canvas (its
+  curves and milestones move to the first canvas — nothing is lost; the last canvas
   can't be deleted).
-- **+ Curve** adds a curve to the selected curve's layer. Per-curve: Duplicate,
-  Delete, visibility (👁), and move between layers via the **Layer** dropdown in the
+- **+ Curve** adds a curve to the selected curve's canvas. Per-curve: Duplicate,
+  Delete, visibility (👁), and move between canvases via the **Canvas** dropdown in the
   Selected-Curve panel.
-- **`▲ ▼`** reorder the selected curve within its layer (draw order) and, at a layer
-  boundary, **move it into the adjacent layer** — so you can duplicate a curve and
-  walk the copy up or down into another layer.
+- **`▲ ▼`** reorder the selected curve within its canvas (draw order) and, at a canvas
+  boundary, **move it into the adjacent canvas** — so you can duplicate a curve and
+  walk the copy up or down into another canvas.
 
 ---
 
 ## Milestones
 
 Named markers along the x-axis (the *Milestones* panel), **grouped under the same
-layer headers** as the curves — the panel mirrors the *Curve Layers* UX. Each row is
+canvas headers** as the curves — the panel mirrors the *Composition* UX. Each row is
 a compact line: visibility · label · `x` (0–1) · `y` (blank = sits on the axis; a
 value floats the label at that height) · guide-line toggle. **Click a row to select
 it**, then the shared **`▲ ▼` / Delete** bar below the list reorders it within its
-layer — **crossing into the adjacent layer at the boundary** — or removes it. `+ Add`
-creates one in the selected curve's layer.
+canvas — **crossing into the adjacent canvas at the boundary** — or removes it. `+ Add`
+creates one in the selected curve's canvas.
 
 You can also **drag a milestone label directly on the canvas** (hover shows a faint
 grab box) — it moves the milestone's x and sets its label height, obeys **Snap**
@@ -201,7 +202,7 @@ one. Theme switches are undoable.
 
 ---
 
-## Branch (layer handoffs)
+## Branch (canvas handoffs)
 
 The **Branch** panel adds a visual "handoff" where the story forks into separate
 tracks — useful for multi-act stories like the default scene's post-mastery split.
@@ -209,15 +210,15 @@ It renders a strong **divider**, a subtle **tint** over the region past the spli
 and a glowing focal **node** with connectors.
 
 - A master **Enabled** toggle turns the whole feature on/off.
-- Branch needs **2+ layers**. With a single layer it auto-disables and the chart is
+- Branch needs **2+ canvases**. With a single canvas it auto-disables and the chart is
   one continuous space with curves spanning the full canvas.
 - Controls: Divider · Tint · Node, plus the normalized **Split x** and **Node y**.
 - The **divider** is a solid, glowing vertical **seam** at the split x — the line the
   Phase-2 tracks read as a continuation of Phase 1. Its color is drawn from the
   theme's axis token, so it flexes light/dark. Curves can **snap-anchor** to this x
   (it's a snap target) without having to weld.
-- **Phase-2 layer bands.** The region right of the divider is split into one
-  horizontal **band per non-primary layer**, stacked top→bottom in layer order, each
+- **Phase-2 canvas bands.** The region right of the divider is split into one
+  horizontal **band per non-primary canvas**, stacked top→bottom in canvas order, each
   with its **own Y axis** repeated on the right edge (see *Axes & scale*).
 
 ---
@@ -229,13 +230,13 @@ Y-axis **Low / High** endpoint labels and a **Ticks** toggle. The Y axis is a
 relative 0–1 scale, so the Low/High labels are how you tell readers what the height
 means. Stored in `scene.axes`.
 
-**Per-layer right-edge axes.** When Branch is on (2+ layers), the primary Y axis is
-**repeated separately for each Phase-2 layer band** on the right edge — line +
+**Per-canvas right-edge axes.** When Branch is on (2+ canvases), the primary Y axis is
+**repeated separately for each Phase-2 canvas band** on the right edge — line +
 arrowhead, ticks, the same `Low`/`High` labels (mirrored to the right), and a rotated
 band title. Each band is an even vertical slice of the post-divider region, so the
 right side reads as stacked sub-charts. These honor the **Ticks** toggle and the
 global **Axes** toggle, and export with the slide. Each band title can be **renamed
-or hidden** from the **Branch** panel (it defaults to the layer's name).
+or hidden** from the **Branch** panel (it defaults to the canvas's name).
 
 ---
 
@@ -277,23 +278,23 @@ one. The format is human-editable (below).
 
 ## The default scene (the Crucible Curve)
 
-The starter scene is a worked example of the layer + branch system: a two-act
+The starter scene is a worked example of the canvas + branch system: a two-act
 "crucible" story.
 
-- **Layer 1 — Primary Crucible** (left ~57%): milestones Excitement → Reality
+- **Canvas 1 — Primary Crucible** (left ~57%): milestones Excitement → Reality
   Friction → Persistence → Proficiency → Mastery. Curves **Cost** (spikes early then
   falls), **Resistance** (rises with turbulence then collapses), **Confidence** (dips
   then recovers to a plateau), **Value** (rises slowly then accelerates to a high
   plateau at Mastery).
-- **Layer 2 — Complacency / Decline** (upper-right band): **Complacency** holds high
+- **Canvas 2 — Complacency / Decline** (upper-right band): **Complacency** holds high
   then erodes; **Eroding Value** declines through comfort/bureaucracy/stagnation/
   decline; **Resistance to Change** rises again.
-- **Layer 3 — Renewing the Crucible** (lower-right band): a nested mini-crucible —
+- **Canvas 3 — Renewing the Crucible** (lower-right band): a nested mini-crucible —
   **New Cost** and **New Resistance** bumps, then **Future Value** dips (temporary
   dip) and recovers.
 
 A **branch node** sits on the mature-state plateau at the Mastery handoff. None of
-this is hardcoded — it's just curves, milestones, and layers you can rename, reshape,
+this is hardcoded — it's just curves, milestones, and canvases you can rename, reshape,
 delete, or rebuild for any story.
 
 ---
@@ -307,7 +308,8 @@ The whole scene is one human-editable JSON object (see `scene-default.json`):
   "meta":   { "name", "version" },     // name = the editable visual title
   "mode":   "dark",                    // "dark" | "light" — drives blend / glow / contrast
   "theme":  "crucible-neon",           // id of the active color theme
-  "layers": [ { "id", "name" } ],      // groups curves AND milestones (by their `group` id)
+  "canvases": [ { "id", "name" } ],      // groups curves AND milestones (by their `group` id); ≤3.
+                                       //   (older scenes used "layers" — still loaded, then migrated)
   "artboard": { "width", "height",
                 "padding": { top, right, bottom, left },
                 "background": { "color", "haze", "vignette" } },
@@ -315,8 +317,8 @@ The whole scene is one human-editable JSON object (see `scene-default.json`):
               "axisColor", "guideColor", "labelColor" },
   "axes":   { "xLabel", "yLabel", "yLow", "yHigh", "showTicks" },
   "title":  { "show", "x", "y", "fontSize", "color", "glow", "bold", "align" }, // text = meta.name
-  "regions": {                         // Branch (layer-to-layer handoff)
-    "enabled": true,                   // master on/off (auto-off with <2 layers)
+  "regions": {                         // Branch (canvas-to-canvas handoff)
+    "enabled": true,                   // master on/off (auto-off with <2 canvases)
     "branchX": 0.605,                  // normalized x of the split / divider
     "branch":  { "x", "y", "show" },   // focal fork node
     "divider": true,                   // dashed handoff line
@@ -327,14 +329,14 @@ The whole scene is one human-editable JSON object (see `scene-default.json`):
     "x",                  // normalized 0..1
     "y",                  // optional label height (omit → sits on the axis)
     "showGuide", "visible",
-    "group":  "<layer id>",
+    "group":  "<canvas id>",
     "phase":  "primary" | "post",   // styling hint (label size / placement)
     "color"                          // optional; colored captions read as section headers
   } ],
   "curves": [ {
     "id", "name", "color", "strokeWidth", "glow", "opacity",
     "blendMode", "visible", "locked", "highlight",
-    "group":  "<layer id>",
+    "group":  "<canvas id>",
     "role":   "cost" | "resistance" | "confidence" | "value" | "accent", // theme slot
     "smoothing": "spline" | "bezier",
     "easing", "tension",             // spline feel (see Easing)
@@ -351,7 +353,7 @@ The whole scene is one human-editable JSON object (see `scene-default.json`):
 ```
 
 > **Backward compatibility.** Older scenes load fine — `normalizeScene()` fills in
-> missing fields (layers, mode, axes, title, roles, …) with sensible defaults and
+> missing fields (canvases, mode, axes, title, roles, …) with sensible defaults and
 > infers each curve's `role` from its color.
 
 **Coordinate space.** All geometry is normalized: `x ∈ [0,1]` left→right, `y ∈ [0,1]`
@@ -437,8 +439,8 @@ assets/              favicon + app-icon set + web manifest
 ## Future improvements
 
 - **Parametric branches** — branch-track anchors tied to a parent curve's value at
-  the split x (so editing an earlier layer propagates), plus one-click
-  "fork / collapse / renew" generators that emit a whole layer.
+  the split x (so editing an earlier canvas propagates), plus one-click
+  "fork / collapse / renew" generators that emit a whole canvas.
 - **Import an existing SVG path** → editable anchors/handles (parse `M/C/S/Q`).
 - **Multi-select / box-select** of anchors; **corner vs. smooth** anchor toggle
   (independent handle break) and per-anchor handle-length presets.
@@ -446,7 +448,7 @@ assets/              favicon + app-icon set + web manifest
 - **Higher-end visuals** — animated draw-on for video export, layered additive bloom,
   grain/scanline overlays, gradient strokes along a curve.
 - **Curve math options** — monotone interpolation, per-anchor tension, B-spline mode.
-- **Reassign a milestone's layer from the UI** (currently set via JSON / its default).
+- **Reassign a milestone's canvas from the UI** (currently set via JSON / its default).
 
 ---
 
