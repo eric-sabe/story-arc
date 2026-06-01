@@ -19,8 +19,10 @@ of the editor.
 ## Run it
 
 **Option A — just open it.** Double-click `story-arc.html` (or drag it into a
-browser). The starter scene is embedded in `app.js`, and save/load uses file
-download + `localStorage`, so nothing needs a server.
+browser). When served over `http`, the starter scene is fetched from
+`scene-default.json`; opened via `file://` (where `fetch` is blocked) it falls back
+to the copy embedded in `app.js`. Save/load uses file download + `localStorage`, so
+nothing needs a server.
 
 **Option B — tiny static server** (recommended; restores autosave + PNG export):
 
@@ -252,8 +254,9 @@ or hidden** from the **Branch** panel (it defaults to the canvas's name).
   **"🔒 Zoom Locked"** when locked; the `+ / − / Reset view` buttons still work. The
   setting persists across reloads.
 - **Autosave** — edits autosave to `localStorage`; reopening restores your last
-  scene. *Reset scene* reloads the starter. (The app is version-gated: a schema bump
-  loads the new default instead of a stale saved scene.)
+  scene. *Reset scene* reloads the starter from `scene-default.json` (falling back to
+  the embedded default on `file://`). (The app is version-gated: a schema bump loads
+  the new default instead of a stale saved scene.)
 
 ---
 
@@ -377,10 +380,13 @@ title → branch node → editor overlay. Everything up to the branch node lives
 ## Customizing the defaults
 
 - **Starter geometry** — edit on the canvas (it autosaves), or change the permanent
-  default by editing the `anchors` arrays in **`DEFAULT_SCENE`** inside `app.js`
-  (marked `[MODEL]`). `scene-default.json` mirrors the same data. The `a(x, y)`
-  helper is `{x, y}` shorthand; add/remove anchors freely (handles auto-derive unless
-  you add explicit `hIn`/`hOut`).
+  default by editing **`scene-default.json`** — it's what *Reset scene* and a fresh
+  load fetch when served over `http`. (Easiest: shape it in the editor, **Save JSON**,
+  and replace `scene-default.json` with the result.) The `a(x, y)` helper used in the
+  embedded fallback is `{x, y}` shorthand; add/remove anchors freely (handles
+  auto-derive unless you add explicit `hIn`/`hOut`). **`DEFAULT_SCENE`** inside `app.js`
+  (marked `[MODEL]`) is the `file://` fallback when `fetch` is unavailable — keep it
+  roughly in sync if you rely on offline use.
 - **Artboard** — the *Artboard* panel (W/H) or `DEFAULT_SCENE.artboard`. Inner chart
   margin is `artboard.padding`.
 - **Aesthetic tokens** — grid density/color/opacity, axis/guide/label colors:
@@ -430,7 +436,7 @@ cp assets/favicon-180.png assets/apple-touch-icon.png
 story-arc.html    markup + panel structure + favicon links
 styles.css           editor chrome (the artboard aesthetic is driven by the SVG)
 app.js               the whole engine (model, render, edit, themes, export, history)
-scene-default.json   the starter scene, mirrored for reference / server loading
+scene-default.json   the served starter scene (fetched on Reset / first load over http)
 assets/              favicon + app-icon set + web manifest
 ```
 

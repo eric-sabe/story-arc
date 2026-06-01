@@ -92,8 +92,8 @@
     {
       "id": "ms-901qbvt",
       "label": "COMPLACENCY",
-      "x": 0.7911377245508984,
-      "y": 1.0459075117699894,
+      "x": 0.7905389221556886,
+      "y": 1,
       "showGuide": false,
       "visible": true,
       "phase": "post",
@@ -101,19 +101,6 @@
       "optional": true,
       "color": "#22d3ee",
       "role": "confidence"
-    },
-    {
-      "id": "ms-f41bvhx",
-      "label": "RENEWING THE CRUCIBLE",
-      "x": 0.78,
-      "y": -0.04592592592592602,
-      "showGuide": false,
-      "visible": true,
-      "phase": "post",
-      "group": "renewal",
-      "optional": true,
-      "color": "#ffb24d",
-      "role": "value"
     },
     {
       "id": "ms-dqabk4e",
@@ -136,6 +123,19 @@
       "phase": "post",
       "group": "decline",
       "optional": false
+    },
+    {
+      "id": "ms-f41bvhx",
+      "label": "RENEWING THE CRUCIBLE",
+      "x": 0.7911377245508984,
+      "y": 0.02,
+      "showGuide": false,
+      "visible": true,
+      "phase": "post",
+      "group": "renewal",
+      "optional": true,
+      "color": "#ffb24d",
+      "role": "value"
     },
     {
       "id": "ms-fncs0tp",
@@ -194,12 +194,12 @@
       "anchors": [
         {
           "x": 0,
-          "y": 0.13,
+          "y": 0.3070722415123457,
           "mirror": false
         },
         {
           "x": 0.07592814371257485,
-          "y": 0.3378669644579475,
+          "y": 0.4832098765432099,
           "mirror": false
         },
         {
@@ -208,18 +208,18 @@
           "mirror": false
         },
         {
-          "x": 0.3495209580838323,
-          "y": 0.625,
+          "x": 0.31,
+          "y": 0.75,
           "mirror": false
         },
         {
-          "x": 0.3985984573821108,
-          "y": 0.375,
+          "x": 0.42,
+          "y": 0.42,
           "mirror": false
         },
         {
-          "x": 0.52,
-          "y": 0.18,
+          "x": 0.5093503666495135,
+          "y": 0.22728395061728393,
           "mirror": false
         },
         {
@@ -262,12 +262,12 @@
       "anchors": [
         {
           "x": 0,
-          "y": 0.04,
+          "y": 0.22728395061728393,
           "mirror": false
         },
         {
-          "x": 0.1,
-          "y": 0.28,
+          "x": 0.11251497005988026,
+          "y": 0.35156747323495374,
           "mirror": false
         },
         {
@@ -296,13 +296,13 @@
           "mirror": false
         },
         {
-          "x": 0.5,
-          "y": 0.3070722415123457,
+          "x": 0.48952095808383234,
+          "y": 0.28216522593557103,
           "mirror": false
         },
         {
-          "x": 0.6069461077844311,
-          "y": 0.28,
+          "x": 0.605,
+          "y": 0.13,
           "mirror": false
         }
       ]
@@ -439,64 +439,6 @@
       ]
     },
     {
-      "id": "c-1ex68sq",
-      "name": "False Confidence",
-      "color": "#22d3ee",
-      "strokeWidth": 5,
-      "glow": 16,
-      "opacity": 1,
-      "blendMode": "screen",
-      "visible": true,
-      "locked": false,
-      "smoothing": "spline",
-      "highlight": true,
-      "group": "decline",
-      "role": "confidence",
-      "easing": "",
-      "tension": 1,
-      "labels": [
-        {
-          "id": "lab-40i5zgp",
-          "text": "False Confidence",
-          "x": 0.6823952095808383,
-          "y": 0.9050617283950617,
-          "anchor": 0,
-          "fontSize": 20,
-          "glow": true,
-          "leader": false,
-          "align": "middle",
-          "bold": true
-        }
-      ],
-      "anchors": [
-        {
-          "x": 0.605,
-          "y": 0.95,
-          "mirror": false
-        },
-        {
-          "x": 0.7,
-          "y": 0.9662962962962963,
-          "mirror": false
-        },
-        {
-          "x": 0.8166805061751496,
-          "y": 0.9275308641975308,
-          "mirror": false
-        },
-        {
-          "x": 0.92,
-          "y": 0.88,
-          "mirror": false
-        },
-        {
-          "x": 1,
-          "y": 0.8275308641975309,
-          "mirror": false
-        }
-      ]
-    },
-    {
       "id": "c-7ielsp4",
       "name": "Eroding Value",
       "color": "#ffc93c",
@@ -601,18 +543,76 @@
           "mirror": false
         },
         {
-          "x": 0.84,
-          "y": 0.6777412320360725,
+          "x": 0.8325149700598802,
+          "y": 0.74,
           "mirror": false
         },
         {
-          "x": 0.9286227544910179,
-          "y": 0.7756668655960648,
+          "x": 0.9085386356193862,
+          "y": 0.86,
           "mirror": false
         },
         {
           "x": 1,
-          "y": 0.88,
+          "y": 0.9662962962962963,
+          "mirror": false
+        }
+      ]
+    },
+    {
+      "id": "c-1ex68sq",
+      "name": "Confidence",
+      "color": "#22d3ee",
+      "strokeWidth": 5,
+      "glow": 16,
+      "opacity": 1,
+      "blendMode": "screen",
+      "visible": true,
+      "locked": false,
+      "smoothing": "spline",
+      "highlight": true,
+      "group": "renewal",
+      "role": "confidence",
+      "easing": "",
+      "tension": 1,
+      "labels": [
+        {
+          "id": "lab-40i5zgp",
+          "text": "Resilient Confidence",
+          "x": 0.8588023952095808,
+          "y": 0.46592592592592597,
+          "anchor": 3,
+          "fontSize": 20,
+          "glow": true,
+          "leader": false,
+          "align": "middle",
+          "bold": true
+        }
+      ],
+      "anchors": [
+        {
+          "x": 0.6069461077844311,
+          "y": 0.35156747323495374,
+          "mirror": false
+        },
+        {
+          "x": 0.6823952095808383,
+          "y": 0.28216522593557103,
+          "mirror": false
+        },
+        {
+          "x": 0.75,
+          "y": 0.35156747323495374,
+          "mirror": false
+        },
+        {
+          "x": 0.8588023952095808,
+          "y": 0.42,
+          "mirror": false
+        },
+        {
+          "x": 1,
+          "y": 0.4372839506172839,
           "mirror": false
         }
       ]
@@ -636,9 +636,9 @@
       "labels": [
         {
           "id": "lab-pgf57kj",
-          "text": "Faster Optimization",
-          "x": 0.8588023952095808,
-          "y": 0.21,
+          "text": "Cost (Still)",
+          "x": 0.68,
+          "y": 0.42,
           "anchor": 2,
           "fontSize": 20,
           "glow": true,
@@ -677,7 +677,7 @@
     },
     {
       "id": "c-cyq5tth",
-      "name": "New Resistance",
+      "name": "Resistance",
       "color": "#3f8cff",
       "strokeWidth": 3.5,
       "glow": 11,
@@ -695,9 +695,9 @@
         {
           "id": "lab-2c1k4bn",
           "text": "Productive Resistance",
+          "x": 0.7244311377245508,
+          "y": 0.12481481481481482,
           "anchor": 3,
-          "x": 0.7254491017964072,
-          "y": 0.09024691358024692,
           "fontSize": 20,
           "glow": true,
           "leader": false,
@@ -757,9 +757,9 @@
       "labels": [
         {
           "id": "lab-36g8xoo",
-          "text": "Shorter Time to Value",
-          "x": 0.8062275449101798,
-          "y": 0.42,
+          "text": "Faster Value",
+          "x": 0.8588023952095808,
+          "y": 0.32435619212962963,
           "anchor": 3,
           "fontSize": 20,
           "glow": true,
@@ -795,26 +795,64 @@
           "mirror": false
         }
       ]
-    }
-  ],
-  "canvases": [
-    {
-      "id": "primary",
-      "name": "Phase 1 · Primary Crucible",
-      "axisTitle": "",
-      "axisTitleShow": true
     },
     {
-      "id": "decline",
-      "name": "Phase 2 · Complacency / Decline",
-      "axisTitle": "",
-      "axisTitleShow": true
-    },
-    {
-      "id": "renewal",
-      "name": "Phase 2 · Renewing the Crucible",
-      "axisTitle": "",
-      "axisTitleShow": true
+      "id": "c-vnue2k0",
+      "name": "False Confidence copy",
+      "color": "#22d3ee",
+      "strokeWidth": 5,
+      "glow": 16,
+      "opacity": 1,
+      "blendMode": "screen",
+      "visible": true,
+      "locked": false,
+      "smoothing": "spline",
+      "highlight": true,
+      "group": "decline",
+      "role": "confidence",
+      "easing": "",
+      "tension": 1,
+      "labels": [
+        {
+          "id": "lab-mjxyoa9",
+          "text": "False Confidence",
+          "x": 0.6823952095808383,
+          "y": 0.9050617283950617,
+          "anchor": 0,
+          "fontSize": 20,
+          "glow": true,
+          "leader": false,
+          "align": "middle",
+          "bold": true
+        }
+      ],
+      "anchors": [
+        {
+          "x": 0.605,
+          "y": 0.95,
+          "mirror": false
+        },
+        {
+          "x": 0.7,
+          "y": 0.9662962962962963,
+          "mirror": false
+        },
+        {
+          "x": 0.8166805061751496,
+          "y": 0.9275308641975308,
+          "mirror": false
+        },
+        {
+          "x": 0.92,
+          "y": 0.88,
+          "mirror": false
+        },
+        {
+          "x": 1,
+          "y": 0.8275308641975309,
+          "mirror": false
+        }
+      ]
     }
   ],
   "export": {
@@ -839,5 +877,25 @@
     "glow": true,
     "bold": true,
     "align": "middle"
-  }
+  },
+  "canvases": [
+    {
+      "id": "primary",
+      "name": "Phase 1 · Primary Crucible",
+      "axisTitle": "",
+      "axisTitleShow": true
+    },
+    {
+      "id": "decline",
+      "name": "Phase 2 · Complacency / Decline",
+      "axisTitle": "",
+      "axisTitleShow": false
+    },
+    {
+      "id": "renewal",
+      "name": "Phase 2 · Renewing the Crucible",
+      "axisTitle": "",
+      "axisTitleShow": false
+    }
+  ]
 }

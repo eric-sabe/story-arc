@@ -2005,7 +2005,7 @@ const actions = {
   },
   'save-scene': saveScene,
   'load-scene': () => document.getElementById('file-input').click(),
-  'reset-scene': () => { if (confirm('Reload the starter scene? Unsaved edits will be lost.')) { loadScene(clone(DEFAULT_SCENE)); } },
+  'reset-scene': () => { if (confirm('Reload the starter scene? Unsaved edits will be lost.')) { loadDefaultScene(); } },
   'export-svg-clean': () => exportSVG('clean'),
   'export-svg-pres':  () => exportSVG('presentation'),
   'export-png-trans': () => exportPNG(false),
@@ -2243,7 +2243,7 @@ function syncMilestones() {
     return li;
   };
 
-  // group by layer, in scene.layers order, using the same names as Composition
+  // group by canvas, in scene.canvases order, using the same names as Composition
   for (const layer of sceneCanvases()) {
     const members = state.scene.milestones.filter((m) => m.group === layer.id);
     if (!members.length) continue;
@@ -2900,6 +2900,28 @@ function rebuildEverything() {
    [BOOT]
 ============================================================================ */
 
+// The canonical starter scene lives in scene-default.json, so it can be updated
+// without editing app.js. Fetch it (always revalidating so an updated file wins
+// even when the page is cached). Returns null when fetch is unavailable — e.g.
+// opened via file://, offline, or the file is missing — so callers fall back to
+// the embedded DEFAULT_SCENE.
+async function fetchDefaultScene() {
+  try {
+    const res = await fetch('scene-default.json', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const json = await res.json();
+    if (json && typeof json === 'object') return json;
+  } catch (_) { /* file:// / offline / missing — use the embedded default */ }
+  return null;
+}
+
+// Load the starter scene: the served scene-default.json when reachable, else the
+// embedded DEFAULT_SCENE. Used by Reset scene and by first load.
+async function loadDefaultScene() {
+  const s = await fetchDefaultScene();
+  loadScene(s || clone(DEFAULT_SCENE));
+}
+
 function boot() {
   let initial = null;
   try {
@@ -2918,7 +2940,11 @@ function boot() {
     }
   } catch (_) { /* localStorage blocked (e.g. file://) — fall back to default */ }
   try { state.ui.zoomLock = localStorage.getItem('crucible-zoomlock') === '1'; } catch (_) {}
+  // Render the embedded default immediately so the app always has a scene, then
+  // (when there's no saved scene to restore) upgrade to the served
+  // scene-default.json if it's reachable — keeping first paint instant.
   loadScene(initial || clone(DEFAULT_SCENE));
+  if (!initial) fetchDefaultScene().then((s) => { if (s) loadScene(s); });
   syncZoomLock();
 }
 
@@ -2978,7 +3004,7 @@ function updateToolbarHints() {
 window.crucible = {
   get scene() { return state.scene; },
   load: loadScene,
-  reset: () => loadScene(clone(DEFAULT_SCENE)),
+  reset: () => loadDefaultScene(),
   exportSVG, exportPNG, buildExportSvg,
 };
 
